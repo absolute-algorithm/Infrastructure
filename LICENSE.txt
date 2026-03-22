@@ -1,0 +1,10 @@
+Copyright (c) 2026 FileFormula
+All rights reserved.
+
+This software and its associated files are proprietary to FileFormula and are not licensed for public use, distribution, or modification.
+
+Access to this software is restricted to authorized individuals and organizations who have received explicit permission from FileFormula or have been granted access through internal organizational channels.
+
+Redistribution, use, or modification of this software in source or binary forms, with or without modification, is strictly prohibited except with prior written permission from FileFormula.
+
+For inquiries regarding licensing or access, contact: laliths@fileformula.com

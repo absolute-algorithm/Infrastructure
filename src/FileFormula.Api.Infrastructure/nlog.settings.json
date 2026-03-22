@@ -1,0 +1,37 @@
+{
+  "NLog": {
+    "autoReload": true,
+    "throwConfigExceptions": true,
+    "internalLogLevel": "Info",
+
+    "extensions": [
+      { "assembly": "NLog.Web.AspNetCore" }
+    ],
+
+    "targets": {
+      "console": {
+        "type": "Console",
+        "layout": {
+          "type": "JsonLayout",
+          "includeMdlc": true,
+          "attributes": [
+            { "name": "time",       "layout": "${longdate}" },
+            { "name": "level",      "layout": "${uppercase:${level}}" },
+            { "name": "message",    "layout": "${message}" },
+            { "name": "errorCode",  "layout": "${event-properties:item=ErrorCode}" },
+            { "name": "exception",  "layout": "${exception:format=tostring}" },
+            { "name": "area",       "layout": "${event-properties:item=Area:whenEmpty=${logger}}" },
+            { "name": "logId",      "layout": "${aspnet-request:header=x-correlation-id}" },
+            { "name": "ip",         "layout": "${aspnet-request:header=x-ip-address}" },
+            { "name": "userAgent",  "layout": "${aspnet-request:header=x-user-agent}" }
+          ]
+        }
+      }
+    },
+    "rules": [
+      { "logger": "Microsoft.Hosting.Lifetime", "minLevel": "Fatal", "final": true, "writeTo": "console" },
+      { "logger": "Microsoft.AspNetCore.Hosting.Diagnostics", "minLevel": "Fatal", "final": true, "writeTo": "console" },
+      { "logger": "*", "minLevel": "Info",  "maxLevel": "Error", "writeTo": "console" }
+    ]
+  }
+}

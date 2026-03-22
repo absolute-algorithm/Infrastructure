@@ -1,9 +1,21 @@
-# AbsoluteAlgorithm.Api.Common
+
+# FileFormula.Api.Infrastructure
+
 
 Reusable ASP.NET Core Web API infrastructure library. Configure once, get databases, storage, auth, resilience, docs, and more — wired automatically.
 
+
 ```bash
-dotnet add package AbsoluteAlgorithm.Api.Common
+dotnet add package FileFormula.Api.Infrastructure
+```
+
+---
+
+To use the package from the GitLab NuGet feed:
+
+```bash
+dotnet nuget add source "https://gitlab.com/api/v4/groups/127290252/-/packages/nuget/index.json" --name FileFormulaOrg --username <your-gitlab-username> --password <your-personal-access-token> --store-password-in-clear-text
+dotnet add package FileFormula.Api.Infrastructure
 ```
 
 > Targets `net10.0`. Bundles Dapper, Polly, NSwag, NLog, CsvHelper, and provider SDKs for S3, Azure Blob, GCP Storage, and MinIO.
@@ -51,7 +63,7 @@ You can also bind from `appsettings.json`:
 
 ```csharp
 var appConfig = builder.Configuration
-    .GetSection("AbsoluteCommon")
+    .GetSection("FileFormulaApiInfrastructure")
     .Get<ApplicationConfiguration>()
     ?? new ApplicationConfiguration();
 ```
@@ -364,7 +376,7 @@ new AuthManifest
 }
 ```
 
-**JWT**: requires `JWT_SECRET` env var (min 32 chars). Defaults: issuer `AbsoluteAlgorithm.Identity`, audience `AbsoluteAlgorithm.Apps`.
+**JWT**: requires `JWT_SECRET` env var (min 32 chars). Defaults: issuer `FileFormula.Identity`, audience `FileFormula.Apps`.
 
 **Cookies**: registers `AbsoluteAuth` cookie — `HttpOnly`, `SameSite=Strict`, `Secure=Always`, 7-day sliding expiry. Login redirects become `401`.
 

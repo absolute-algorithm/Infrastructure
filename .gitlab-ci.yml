@@ -1,0 +1,67 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  # 1. THE BASICS
+  PROJECT_PATH: "src/Common/Common.csproj"
+  PACKAGE_ID: "FileFormula.Api.Infrastructure"
+  
+  # 2. YOUR ORGANIZATION FEED (Using Group ID 127290252)
+  ORG_NUGET_SOURCE: "https://gitlab.com/api/v4/groups/127290252/-/packages/nuget/index.json"
+
+# --- REUSABLE BUILD SETTINGS ---
+.build_base:
+  image: mcr.microsoft.com/dotnet/sdk:10.0
+  stage: build
+  artifacts:
+    paths:
+      - ./dist/*.nupkg
+    expire_in: 1 week
+
+# ==========================================
+# 1. DEV PIPELINE: 1.0.0-beta.X
+# ==========================================
+build_dev:
+  extends: .build_base
+  script:
+    - VERSION=$(grep -oPm1 '(?<=<Version>)[^<]+' $PROJECT_PATH | tr -d '[:space:]')
+    - FULL_VERSION="$VERSION-beta.$CI_PIPELINE_IID"
+    - echo "Packing Dev Version $FULL_VERSION"
+    - dotnet pack $PROJECT_PATH -c Release -o ./dist /p:PackageId=$PACKAGE_ID /p:PackageVersion=$FULL_VERSION
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev"
+
+publish_dev:
+  stage: deploy
+  image: mcr.microsoft.com/dotnet/sdk:10.0
+  needs: ["build_dev"]
+  script:
+    - dotnet nuget add source "$ORG_NUGET_SOURCE" --name FileFormulaOrg --username gitlab-ci-token --password $CI_JOB_TOKEN --store-password-in-clear-text
+    - dotnet nuget push ./dist/*.nupkg --source FileFormulaOrg --skip-duplicate
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev"
+      when: manual # This is your "Approve" button in GitLab
+
+# ==========================================
+# 2. MAIN PIPELINE: 1.0.0 (Stable)
+# ==========================================
+build_main:
+  extends: .build_base
+  script:
+    - VERSION=$(grep -oPm1 '(?<=<Version>)[^<]+' $PROJECT_PATH | tr -d '[:space:]')
+    - echo "Packing Production Version $VERSION"
+    - dotnet pack $PROJECT_PATH -c Release -o ./dist /p:PackageId=$PACKAGE_ID /p:PackageVersion=$VERSION
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+publish_main:
+  stage: deploy
+  image: mcr.microsoft.com/dotnet/sdk:10.0
+  needs: ["build_main"]
+  script:
+    - dotnet nuget add source "$ORG_NUGET_SOURCE" --name FileFormulaOrg --username gitlab-ci-token --password $CI_JOB_TOKEN --store-password-in-clear-text
+    - dotnet nuget push ./dist/*.nupkg --source FileFormulaOrg --skip-duplicate
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual # This is your "Approve" button in GitLab

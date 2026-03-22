@@ -144,7 +144,7 @@ END;";
     /// <param name="app">The application to configure.</param>
     /// <param name="appConfig">The application configuration.</param>
     /// <returns>The <paramref name="app"/> instance.</returns>
-    public static WebApplication UseAbsolutePipeline(this WebApplication app, ApplicationConfiguration appConfig)
+    public static WebApplication UseFileFormulaPipeline(this WebApplication app, ApplicationConfiguration appConfig)
     {
         app.UseForwardedHeaders();
 
@@ -172,24 +172,24 @@ END;";
         app.UseExceptionMiddleware();
         if (appConfig.EnableWebhookSignatureValidation)
         {
-            app.UseAbsoluteWebhookSignatureValidation(appConfig.WebhookSignaturePolicies);
+            app.UseFileFormulaWebhookSignatureValidation(appConfig.WebhookSignaturePolicies);
         }
         app.UseResponseCompression();
         app.UseResponseCaching();
         app.UseStaticFiles();
-        app.UseAbsoluteSwagger(appConfig.SwaggerPolicy);
+        app.UseFileFormulaSwagger(appConfig.SwaggerPolicy);
 
         app.UseAuthentication();
-        app.UseAbsoluteCsrfProtection(appConfig.AuthManifest);
+        app.UseFileFormulaCsrfProtection(appConfig.AuthManifest);
         app.UseAuthorization();
-        app.UseAbsoluteIdempotency(appConfig.IdempotencyPolicy);
+        app.UseFileFormulaIdempotency(appConfig.IdempotencyPolicy);
 
         if (appConfig.EnableRelationalDatabase)
         {
-            app.UseAbsoluteDatabase();
+            app.UseFileFormulaDatabase();
         }
 
-        app.UseAbsoluteHealthEndpoints(appConfig.EnableHealthChecks);
+        app.UseFileFormulaHealthEndpoints(appConfig.EnableHealthChecks);
 
         app.MapGet("/", () => $"API is Operational");
         app.MapControllers();
@@ -197,7 +197,7 @@ END;";
         return app;
     }
 
-    private static IApplicationBuilder UseAbsoluteCsrfProtection(this IApplicationBuilder app, AuthManifest? authManifest)
+    private static IApplicationBuilder UseFileFormulaCsrfProtection(this IApplicationBuilder app, AuthManifest? authManifest)
     {
         if (authManifest?.EnableCookies != true || authManifest.EnableCsrfProtection != true)
         {
@@ -207,7 +207,7 @@ END;";
         return app.UseMiddleware<CsrfMiddleware>();
     }
 
-    private static IApplicationBuilder UseAbsoluteIdempotency(this IApplicationBuilder app, Models.Idempotency.IdempotencyPolicy? policy)
+    private static IApplicationBuilder UseFileFormulaIdempotency(this IApplicationBuilder app, Models.Idempotency.IdempotencyPolicy? policy)
     {
         if (policy is null)
         {
@@ -217,7 +217,7 @@ END;";
         return app.UseMiddleware<IdempotencyMiddleware>();
     }
 
-    private static IApplicationBuilder UseAbsoluteWebhookSignatureValidation(this IApplicationBuilder app, IReadOnlyList<Models.Webhooks.WebhookSignaturePolicy>? policies)
+    private static IApplicationBuilder UseFileFormulaWebhookSignatureValidation(this IApplicationBuilder app, IReadOnlyList<Models.Webhooks.WebhookSignaturePolicy>? policies)
     {
         if (policies is null || !policies.Any())
         {
@@ -227,7 +227,7 @@ END;";
         return app.UseMiddleware<WebhookSignatureMiddleware>();
     }
 
-    private static IApplicationBuilder UseAbsoluteSwagger(this IApplicationBuilder app, Models.Documentation.SwaggerPolicy? policy)
+    private static IApplicationBuilder UseFileFormulaSwagger(this IApplicationBuilder app, Models.Documentation.SwaggerPolicy? policy)
     {
         if (policy is null)
         {
@@ -313,7 +313,7 @@ END;";
     /// </summary>
     /// <param name="app">The application to configure.</param>
     /// <param name="enableHealthChecks">A value indicating whether health endpoints are enabled.</param>
-    public static void UseAbsoluteHealthEndpoints(this WebApplication app, bool enableHealthChecks)
+    private static void UseFileFormulaHealthEndpoints(this WebApplication app, bool enableHealthChecks)
     {
         if (!enableHealthChecks)
         {
@@ -322,11 +322,11 @@ END;";
 
         app.MapHealthChecks("/health", new HealthCheckOptions
         {
-            ResponseWriter = (context, report) => WriteAbsoluteHealthResponse(context, report, includeDetails: true)
+            ResponseWriter = (context, report) => WriteFileFormulaHealthResponse(context, report, includeDetails: true)
         });
     }
 
-    private static async Task WriteAbsoluteHealthResponse(HttpContext context, HealthReport report, bool includeDetails)
+    private static async Task WriteFileFormulaHealthResponse(HttpContext context, HealthReport report, bool includeDetails)
     {
         context.Response.ContentType = "application/json";
 
@@ -390,5 +390,5 @@ END;";
     /// </summary>
     /// <param name="app">The application builder.</param>
     /// <returns>The <paramref name="app"/> instance.</returns>
-    public static IApplicationBuilder UseAbsoluteDatabase(this IApplicationBuilder app) => app.UseMiddleware<DatabaseTransactionMiddleware>();
+    private static IApplicationBuilder UseFileFormulaDatabase(this IApplicationBuilder app) => app.UseMiddleware<DatabaseTransactionMiddleware>();
 }

@@ -17,27 +17,242 @@ dotnet add package FileFormula.Api.Infrastructure
 ## Quick Start
 
 ```csharp
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-var appConfig = new ApplicationConfiguration
+//sample Application Configuration
+ApplicationConfiguration appConfig = new ApplicationConfiguration
 {
+    // Enable or disable relational database support (SQL Server, PostgreSQL)
     EnableRelationalDatabase = true,
-    DatabasePolicies = [
+
+    // List of database connection policies (multiple DBs supported)
+    DatabasePolicies = new List<DatabasePolicy>
+    {
         new DatabasePolicy
         {
-            Name = "primary",
+            // Database provider: MSSQL or PostgreSQL
+            DatabaseProvider = DatabaseProvider.MSSQL,
+            // Name of the environment variable holding the connection string
+            ConnectionStringName = "<MSSQL_CONNECTION_STRING_ENVIRONMENT_VARIABLE_NAME>",
+            // Run initialization script on startup
+            InitializeDatabase = true,
+            // Create and wire up audit table/triggers
+            InitializeAuditTable = true,
+            // SQL script to initialize the database
+            InitializationScript = "<MSSQL_SCRIPT>",
+            // Unique key for this database (used for DI)
+            Name = "<KEYED_IDENTIFIER>",
+            // Connection pool settings
+            MaxPoolSize = 100,
+            MinPoolSize = 10,
+            // Command timeout in seconds
+            CommandTimeoutSeconds = 30
+        },
+        new DatabasePolicy
+        {
             DatabaseProvider = DatabaseProvider.PostgreSQL,
-            ConnectionStringName = "PRIMARY_DB_CONNECTION"
+            ConnectionStringName = "<POSTGRESQL_CONNECTION_STRING_ENVIRONMENT_VARIABLE_NAME>",
+            InitializeDatabase = true,
+            InitializeAuditTable = true,
+            InitializationScript = "<POSTGRESQL_SCRIPT>",
+            Name = "<KEYED_IDENTIFIER>",
+            MaxPoolSize = 100,
+            MinPoolSize = 10,
+            CommandTimeoutSeconds = 30
         }
-    ],
+    },
+
+    // Enable or disable health check endpoints
+    EnableHealthChecks = true,
+
+    // Enable or disable idempotency middleware
+    EnableIdempotency = true,
+
+    // Idempotency policy configuration
+    IdempotencyPolicy = new IdempotencyPolicy
+    {
+        // HTTP methods to treat as idempotent
+        ReplayableMethods = new List<string> { "POST", "PUT" },
+        // How long to cache idempotency keys (minutes)
+        ExpirationMinutes = 10,
+        // Include query string in idempotency key
+        IncludeQueryStringInKey = true,
+        // Max response body size to cache (bytes)
+        MaximumResponseBodyBytes = 1024 * 1024 // 1 MB
+    },
+
+    // Enable or disable object storage support
+    EnableStorage = true,
+
+    // List of object storage policies (S3, Azure, Minio, GCP)
+    StoragePolicies = new List<StoragePolicy>
+    {
+        new StoragePolicy
+        {
+            // Unique key for this storage provider
+            Name = "<KEYED_IDENTIFIER>",
+            // Storage provider type
+            StorageProvider = StorageProvider.Minio,
+            // Name of the environment variable holding the connection string
+            ConnectionStringName = "<MINIO_CONNECTION_STRING_ENVIRONMENT_VARIABLE_NAME>",
+            // Bucket/container name
+            BucketName = "<BUCKET_NAME>"
+        },
+        new StoragePolicy
+        {
+            Name = "<KEYED_IDENTIFIER>",
+            StorageProvider = StorageProvider.AzureBlob,
+            ConnectionStringName = "<AZURE_BLOB_STORAGE_CONNECTION_STRING_ENVIRONMENT_VARIABLE_NAME>",
+            BucketName = "<BUCKET_NAME>"
+        },
+        new StoragePolicy
+        {
+            Name = "<KEYED_IDENTIFIER>",
+            StorageProvider = StorageProvider.S3,
+            ConnectionStringName = "<S3_STORAGE_CONNECTION_STRING_ENVIRONMENT_VARIABLE_NAME>",
+            BucketName = "<BUCKET_NAME>"
+        },
+        new StoragePolicy
+        {
+            Name = "<KEYED_IDENTIFIER>",
+            StorageProvider = StorageProvider.GoogleCloud,
+            ConnectionStringName = "<GCP_STORAGE_CONNECTION_STRING_ENVIRONMENT_VARIABLE_NAME>",
+            BucketName = "<BUCKET_NAME>"
+        }
+    },
+
+    // Enable or disable rate limiting
+    EnableRateLimit = true,
+
+    // List of rate limit policies
+    RateLimitPolicies = new List<RateLimitPolicy>
+    {
+        new RateLimitPolicy
+        {
+            // Unique name for this rate limit policy
+            PolicyName = "<POLICY_NAME>",
+            // Algorithm: FixedWindow, SlidingWindow, TokenBucket, Concurrency
+            Algorithm = RateLimitAlgorithm.FixedWindow,
+            // Scope: IpAddress, User, Endpoint, ApiKey, etc.
+            Scope = RateLimitScope.IpAddress,
+            // Number of allowed requests per window
+            PermitLimit = 2,
+            // Time window for rate limiting
+            Window = TimeSpan.FromSeconds(2)
+        }
+    },
+
+    // Enable or disable API versioning
+    EnableApiVersioning = true,
+
+    // API versioning policy configuration
+    ApiVersioningPolicy = new ApiVersioningPolicy
+    {
+        // Default API version (major.minor)
+        DefaultMajorVersion = 1,
+        DefaultMinorVersion = 0,
+        // Assume default version if not specified
+        AssumeDefaultVersionWhenUnspecified = true,
+        // Include API version info in responses
+        ReportApiVersions = true,
+        // Where to read API version from (query, header, url, media type)
+        Readers = [
+            ApiVersionReaderType.QueryString,
+            ApiVersionReaderType.Header,
+            ApiVersionReaderType.UrlSegment,
+            ApiVersionReaderType.MediaType
+        ],
+        // Query string parameter name for version
+        QueryStringParameterName = "api-version",
+        // Header names for versioning
+        HeaderNames = ["x-api-version"],
+        // Media type parameter name for versioning
+        MediaTypeParameterName = "ver"
+    },
+
+    // Enable or disable Swagger/OpenAPI docs
+    EnableSwagger = true,
+
+    // Swagger/OpenAPI policy configuration
+    SwaggerPolicy = new SwaggerPolicy
+    {
+        // API title
+        Title = "<API_TITLE>",
+        // API description
+        Description = "<API_DESCRIPTION>",
+        // Document mode: Single, PerApiVersion, etc.
+        DocumentMode = SwaggerDocumentMode.PerApiVersion,
+        // List of Swagger document definitions
+        Documents = new List<SwaggerDocumentDefinition>
+        {
+            new SwaggerDocumentDefinition { DocumentName = "v1", ApiGroupName = "v1", Version = "1.0", Title = "<DOC_TITLE_V1>" },
+            new SwaggerDocumentDefinition { DocumentName = "v2", ApiGroupName = "v2", Version = "2.0", Title = "<DOC_TITLE_V2>" },
+            new SwaggerDocumentDefinition { DocumentName = "v3", ApiGroupName = "v3", Version = "3.0", Title = "<DOC_TITLE_V3>" }
+        }
+    },
+
+    // Enable or disable webhook signature validation
+    EnableWebhookSignatureValidation = true,
+
+    // List of webhook signature policies
+    WebhookSignaturePolicies = new List<WebhookSignaturePolicy>
+    {
+        new WebhookSignaturePolicy
+        {
+            // Unique name for this webhook policy
+            Name = "<WEBHOOK_POLICY_NAME>",
+            // Path prefix for webhook endpoints
+            PathPrefix = "<WEBHOOK_PATH_PREFIX>",
+            // Name of the environment variable holding the secret
+            SecretName = "<WEBHOOK_SECRET_ENVIRONMENT_VARIABLE_NAME>",
+            // Signature algorithm
+            Algorithm = RequestSignatureAlgorithm.HmacSha256,
+            // Allowed clock skew in seconds
+            AllowedClockSkewSeconds = 300
+        }
+    },
+
+    // Enable or disable authentication handlers
     ConfigureAuthentication = true,
+
+    // Enable or disable authorization policies
     ConfigureAuthorization = true,
-    AuthManifest = new AuthManifest { EnableJwt = true }
+
+    // Authentication and authorization manifest
+    AuthManifest = new AuthManifest
+    {
+        // Enable JWT authentication
+        EnableJwt = true,
+        // Enable cookie authentication
+        EnableCookies = true,
+        // Enable CSRF protection (only for cookies, enable on HTTPS)
+        EnableCsrfProtection = false,
+        // Enable API key authentication
+        EnableApiKeyAuth = true,
+        // List of authorization policies
+        Policies = new List<AuthPolicy>
+        {
+            new AuthPolicy
+            {
+                // Policy name
+                PolicyName = "<AUTH_POLICY_NAME_1>",
+                // Required roles for this policy
+                RequiredRoles = new List<string> { "<ROLE_1>", "<ROLE_2>" }
+            },
+            new AuthPolicy
+            {
+                PolicyName = "<AUTH_POLICY_NAME_2>",
+                // Required claims for this policy
+                RequiredClaims = new Dictionary<string, string> { { "<CLAIM_KEY>", "<CLAIM_VALUE>" } }
+            }
+        }
+    },
 };
 
-builder.RegisterAbsoluteWebApplicationBuilder(appConfig);
-var app = builder.Build();
-app.UseAbsolutePipeline(appConfig);
+builder.RegisterFileFormulaWebApplicationBuilder(appConfig);
+
+WebApplication app = builder.Build();
+app.UseFileFormulaPipeline(appConfig);
 app.Run();
 ```
 
@@ -334,31 +549,150 @@ new StoragePolicy
 }
 ```
 
-### Usage
-
-```csharp
-var storage = sp.GetRequiredKeyedService<StorageService>("files");
-
-// Upload
-var objectName = await storage.UploadAsync(new FileContent
-{
-    FileName = "photo.png",
-    ByteArrayContent = bytes,
-    ContentType = "image/png"
-});
-
-// Download URL
-var url = await storage.GetDownloadUrlAsync(objectName, TimeSpan.FromMinutes(15));
-```
-
-Filenames are sanitized automatically. Extensions are preserved.
-
 ---
 
-## HTTP Clients
+```csharp
+var builder = WebApplication.CreateBuilder(args);
 
-Named clients registered from `HttpClientPolicy`, resolved via `IHttpClientFactory`.
+ApplicationConfiguration appConfig = new ApplicationConfiguration
+{
+    EnableRelationalDatabase = true,
+    DatabasePolicies = new List<DatabasePolicy>
+    {
+        new DatabasePolicy
+        {
+            DatabaseProvider = DatabaseProvider.MSSQL,
+            ConnectionStringName = "MSSQLCS",
+            InitializeDatabase = true,
+            InitializeAuditTable = true,
+            InitializationScript = msSqlScript,
+            Name = "testdb",
+            MaxPoolSize = 100,
+            MinPoolSize = 10,
+            CommandTimeoutSeconds = 30
+        },
+        new DatabasePolicy
+        {
+            DatabaseProvider = DatabaseProvider.PostgreSQL,
+            ConnectionStringName = "POSTGRESCS",
+            InitializeDatabase = true,
+            InitializeAuditTable = true,
+            InitializationScript = postgreSqlScript,
+            Name = "test_db",
+            MaxPoolSize = 100,
+            MinPoolSize = 10,
+            CommandTimeoutSeconds = 30
+        }
+    },
+    EnableHealthChecks = true,
+    EnableIdempotency = true,
+    IdempotencyPolicy = new IdempotencyPolicy
+    {
+        ReplayableMethods = new List<string> { "POST", "PUT" },
+        ExpirationMinutes = 10,
+        IncludeQueryStringInKey = true,
+        MaximumResponseBodyBytes = 1024 * 1024 // 1 MB
+    },
+    EnableStorage = true,
+    StoragePolicies = new List<StoragePolicy>
+    {
+        new StoragePolicy
+        {
+            Name = "minio",
+            StorageProvider = StorageProvider.Minio,
+            ConnectionStringName = "MINIO_CONNECTION_STRING",
+            BucketName = "images"
+        },
+        new StoragePolicy
+        {
+            Name = "azure",
+            StorageProvider = StorageProvider.AzureBlob,
+            ConnectionStringName = "AZURE_STORAGE_CONNECTION_STRING",
+            BucketName = "images"
+        },
+        new StoragePolicy
+        {
+            Name = "s3",
+            StorageProvider = StorageProvider.S3,
+            ConnectionStringName = "S3_CONNECTION_STRING",
+            BucketName = "images"
+        }
+    },
+    EnableRateLimit = true,
+    RateLimitPolicies = new List<RateLimitPolicy>
+    {
+        new RateLimitPolicy
+        {
+            PolicyName = "rpol",
+            Algorithm = RateLimitAlgorithm.FixedWindow,
+            Scope = RateLimitScope.IpAddress,
+            PermitLimit = 2,
+            Window = TimeSpan.FromSeconds(2)
+        }
+    },
+    EnableApiVersioning = true,
+    ApiVersioningPolicy = new ApiVersioningPolicy
+    {
+        DefaultMajorVersion = 1,
+        DefaultMinorVersion = 0,
+        AssumeDefaultVersionWhenUnspecified = true,
+        ReportApiVersions = true,
+        Readers = [
+            ApiVersionReaderType.QueryString,
+            ApiVersionReaderType.Header,
+            ApiVersionReaderType.UrlSegment,
+            ApiVersionReaderType.MediaType
+        ],
+        QueryStringParameterName = "api-version",
+        HeaderNames = ["x-api-version"],
+        MediaTypeParameterName = "ver"
+    },
+    EnableSwagger = true,
+    SwaggerPolicy = new SwaggerPolicy
+    {
+        Title = "Sandbox API",
+        Description = "Sandbox API Documentation",
+        DocumentMode = SwaggerDocumentMode.PerApiVersion,
+        Documents = new List<SwaggerDocumentDefinition>
+        {
+            new SwaggerDocumentDefinition { DocumentName = "v1", ApiGroupName = "v1", Version = "1.0", Title = "Sandbox API v1" },
+            new SwaggerDocumentDefinition { DocumentName = "v2", ApiGroupName = "v2", Version = "2.0", Title = "Sandbox API v2" },
+            new SwaggerDocumentDefinition { DocumentName = "v3", ApiGroupName = "v3", Version = "3.0", Title = "Sandbox API v3" }
+        }
+    },
+    EnableWebhookSignatureValidation = true,
+    WebhookSignaturePolicies = new List<WebhookSignaturePolicy>
+    {
+        new WebhookSignaturePolicy
+        {
+            Name = "default",
+            PathPrefix = "/webhooks",
+            SecretName = "WEBHOOK_SECRET",
+            Algorithm = RequestSignatureAlgorithm.HmacSha256,
+            AllowedClockSkewSeconds = 300
+        }
+    },
+    ConfigureAuthentication = true,
+    ConfigureAuthorization = true,
+    AuthManifest = new AuthManifest
+    {
+        EnableJwt = true,
+        EnableCookies = true,
+        EnableCsrfProtection = false, //enable this on https
+        EnableApiKeyAuth = true,
+        Policies = new List<AuthPolicy>
+        {
+            new AuthPolicy { PolicyName = "AdminOnly", RequiredRoles = new List<string> { "Admin" } },
+            new AuthPolicy { PolicyName = "PremiumUser", RequiredClaims = new Dictionary<string, string> { { "subscription", "premium" } } }
+        }
+    },
+};
 
+
+var app = builder.Build();
+app.UseFileFormulaPipeline(appConfig);
+app.Run();
+```
 ```csharp
 new HttpClientPolicy
 {
@@ -670,7 +1004,7 @@ throw ApiExceptions.FromCode("E410", "Resource gone");
 
 ## Middleware Pipeline
 
-`UseAbsolutePipeline` wires everything in this order:
+`UseFileFormulaPipeline` wires everything in this order:
 
 1. Forwarded headers
 2. HSTS + HTTPS redirect (non-dev)

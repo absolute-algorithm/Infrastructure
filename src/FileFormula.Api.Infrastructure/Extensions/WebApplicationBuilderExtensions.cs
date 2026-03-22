@@ -56,7 +56,7 @@ public static class WebApplicationBuilderExtensions
     /// <param name="builder">The application builder to configure.</param>
     /// <param name="appConfig">The application configuration.</param>
     /// <returns>The <paramref name="builder"/> instance.</returns>
-    public static WebApplicationBuilder RegisterAbsoluteWebApplicationBuilder(this WebApplicationBuilder builder, ApplicationConfiguration appConfig)
+    public static WebApplicationBuilder RegisterFileFormulaWebApplicationBuilder(this WebApplicationBuilder builder, ApplicationConfiguration appConfig)
     {
         ApplicationConfigurationValidator.ValidateOrThrow(appConfig);
 
@@ -110,49 +110,49 @@ public static class WebApplicationBuilderExtensions
 
         if (appConfig.EnableApiVersioning)
         {
-            builder.Services.AddAbsoluteApiVersioning(appConfig.ApiVersioningPolicy);
+            builder.Services.AddFileFormulaApiVersioning(appConfig.ApiVersioningPolicy);
         }
 
         if (appConfig.EnableSwagger)
         {
-            builder.Services.AddAbsoluteSwagger(appConfig);
+            builder.Services.AddFileFormulaSwagger(appConfig);
         }
 
         if (appConfig.EnableRelationalDatabase)
         {
-            builder.Services.AddAbsoluteDatabase(appConfig.DatabasePolicies);
+            builder.Services.AddFileFormulaDatabase(appConfig.DatabasePolicies);
         }
 
         if (appConfig.EnableStorage)
         {
-            builder.Services.AddAbsoluteStorage(appConfig.StoragePolicies);
+            builder.Services.AddFileFormulaStorage(appConfig.StoragePolicies);
         }
 
-        builder.Services.AddAbsoluteHttpClients(appConfig.HttpClientPolicies);
+        builder.Services.AddFileFormulaHttpClients(appConfig.HttpClientPolicies);
 
         if (appConfig.EnableRateLimit)
         {
-            builder.Services.AddAbsoluteRateLimits(appConfig.RateLimitPolicies);
+            builder.Services.AddFileFormulaRateLimits(appConfig.RateLimitPolicies);
         }
 
         if (appConfig.ConfigureAuthentication)
         {
-            builder.Services.AddAbsoluteAuthentication(appConfig.AuthManifest);
+            builder.Services.AddFileFormulaAuthentication(appConfig.AuthManifest);
         }
 
         if (appConfig.ConfigureAuthorization)
         {
-            builder.Services.AddAbsoluteAuthorization(appConfig.AuthManifest?.Policies);
+            builder.Services.AddFileFormulaAuthorization(appConfig.AuthManifest?.Policies);
         }
 
         if (appConfig.EnableIdempotency)
         {
-            builder.Services.AddAbsoluteIdempotency(appConfig.IdempotencyPolicy);
+            builder.Services.AddFileFormulaIdempotency(appConfig.IdempotencyPolicy);
         }
 
         if (appConfig.EnableWebhookSignatureValidation && appConfig.WebhookSignaturePolicies is not null)
         {
-            builder.Services.AddAbsoluteWebhookSignatureValidation(appConfig.WebhookSignaturePolicies);
+            builder.Services.AddFileFormulaWebhookSignatureValidation(appConfig.WebhookSignaturePolicies);
         }
 
         builder.Services.Configure<ForwardedHeadersOptions>(options =>
@@ -165,7 +165,7 @@ public static class WebApplicationBuilderExtensions
 
         if (appConfig.EnableHealthChecks)
         {
-            builder.Services.AddAbsoluteHealthChecks(appConfig.DatabasePolicies, appConfig.StoragePolicies);
+            builder.Services.AddFileFormulaHealthChecks(appConfig.DatabasePolicies, appConfig.StoragePolicies);
         }
 
         return builder;
@@ -177,7 +177,7 @@ public static class WebApplicationBuilderExtensions
     /// <param name="services">The service collection.</param>
     /// <param name="policy">The idempotency policy.</param>
     /// <returns>The <paramref name="services"/> instance.</returns>
-    public static IServiceCollection AddAbsoluteIdempotency(this IServiceCollection services, IdempotencyPolicy? policy)
+    private static IServiceCollection AddFileFormulaIdempotency(this IServiceCollection services, IdempotencyPolicy? policy)
     {
         if (policy is null)
         {
@@ -196,7 +196,7 @@ public static class WebApplicationBuilderExtensions
     /// <param name="services">The service collection.</param>
     /// <param name="policy">The API versioning policy.</param>
     /// <returns>The <paramref name="services"/> instance.</returns>
-    public static IServiceCollection AddAbsoluteApiVersioning(this IServiceCollection services, ApiVersioningPolicy? policy)
+    private static IServiceCollection AddFileFormulaApiVersioning(this IServiceCollection services, ApiVersioningPolicy? policy)
     {
         if (policy is null)
         {
@@ -231,7 +231,7 @@ public static class WebApplicationBuilderExtensions
     /// <param name="services">The service collection.</param>
     /// <param name="configuration">The application configuration.</param>
     /// <returns>The <paramref name="services"/> instance.</returns>
-    public static IServiceCollection AddAbsoluteSwagger(this IServiceCollection services, ApplicationConfiguration configuration)
+    private static IServiceCollection AddFileFormulaSwagger(this IServiceCollection services, ApplicationConfiguration configuration)
     {
         ArgumentNullException.ThrowIfNull(configuration);
 
@@ -297,7 +297,7 @@ public static class WebApplicationBuilderExtensions
     /// <param name="services">The service collection.</param>
     /// <param name="policies">The webhook signature policies.</param>
     /// <returns>The <paramref name="services"/> instance.</returns>
-    public static IServiceCollection AddAbsoluteWebhookSignatureValidation(this IServiceCollection services, IReadOnlyList<WebhookSignaturePolicy> policies)
+    private static IServiceCollection AddFileFormulaWebhookSignatureValidation(this IServiceCollection services, IReadOnlyList<WebhookSignaturePolicy> policies)
     {
         ArgumentNullException.ThrowIfNull(policies);
 
@@ -392,7 +392,7 @@ public static class WebApplicationBuilderExtensions
     /// <param name="services">The service collection.</param>
     /// <param name="databasePolicies">The database policies to register.</param>
     /// <returns>The <paramref name="services"/> instance.</returns>
-    public static IServiceCollection AddAbsoluteDatabase(this IServiceCollection services, List<DatabasePolicy>? databasePolicies)
+    private static IServiceCollection AddFileFormulaDatabase(this IServiceCollection services, List<DatabasePolicy>? databasePolicies)
     {
         if (databasePolicies is null || !databasePolicies.Any()) return services;
 
@@ -410,7 +410,7 @@ public static class WebApplicationBuilderExtensions
     /// <param name="services">The service collection.</param>
     /// <param name="policies">The storage policies to register.</param>
     /// <returns>The <paramref name="services"/> instance.</returns>
-    public static IServiceCollection AddAbsoluteStorage(this IServiceCollection services, List<StoragePolicy>? policies)
+    private static IServiceCollection AddFileFormulaStorage(this IServiceCollection services, List<StoragePolicy>? policies)
     {
         if (policies is null || !policies.Any()) return services;
 
@@ -428,7 +428,7 @@ public static class WebApplicationBuilderExtensions
     /// <param name="services">The service collection.</param>
     /// <param name="policies">The HTTP client policies to register.</param>
     /// <returns>The <paramref name="services"/> instance.</returns>
-    public static IServiceCollection AddAbsoluteHttpClients(this IServiceCollection services, List<HttpClientPolicy>? policies)
+    private static IServiceCollection AddFileFormulaHttpClients(this IServiceCollection services, List<HttpClientPolicy>? policies)
     {
         if (policies is null || !policies.Any()) return services;
 
@@ -473,7 +473,7 @@ public static class WebApplicationBuilderExtensions
     /// <param name="dbPolicies">Database policies to expose as health checks.</param>
     /// <param name="storagePolicies">Storage policies to expose as health checks.</param>
     /// <returns>The <paramref name="services"/> instance.</returns>
-    public static IServiceCollection AddAbsoluteHealthChecks(
+    private static IServiceCollection AddFileFormulaHealthChecks(
     this IServiceCollection services,
     List<DatabasePolicy>? dbPolicies,
     List<StoragePolicy>? storagePolicies)
@@ -556,7 +556,7 @@ public static class WebApplicationBuilderExtensions
     /// <param name="services">The service collection.</param>
     /// <param name="policies">The rate limit policies to register.</param>
     /// <returns>The <paramref name="services"/> instance.</returns>
-    public static IServiceCollection AddAbsoluteRateLimits(this IServiceCollection services, List<RateLimitPolicy>? policies)
+    private static IServiceCollection AddFileFormulaRateLimits(this IServiceCollection services, List<RateLimitPolicy>? policies)
     {
         if (policies is null || !policies.Any()) return services;
 
@@ -650,9 +650,9 @@ public static class WebApplicationBuilderExtensions
     /// </summary>
     /// <param name="services">The service collection.</param>
     /// <returns>The <paramref name="services"/> instance.</returns>
-    public static IServiceCollection AddAbsoluteAuthentication(this IServiceCollection services)
+    private static IServiceCollection AddFileFormulaAuthentication(this IServiceCollection services)
     {
-        return services.AddAbsoluteAuthentication(authManifest: null);
+        return services.AddFileFormulaAuthentication(authManifest: null);
     }
 
     /// <summary>
@@ -661,7 +661,7 @@ public static class WebApplicationBuilderExtensions
     /// <param name="services">The service collection.</param>
     /// <param name="authManifest">The authentication manifest that controls which handlers are registered.</param>
     /// <returns>The <paramref name="services"/> instance.</returns>
-    public static IServiceCollection AddAbsoluteAuthentication(this IServiceCollection services, AuthManifest? authManifest)
+    private static IServiceCollection AddFileFormulaAuthentication(this IServiceCollection services, AuthManifest? authManifest)
     {
         // 1. Fetch all settings from Environment Variables
         var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET");
@@ -762,7 +762,7 @@ public static class WebApplicationBuilderExtensions
 
         if (enableCookies && authManifest?.EnableCsrfProtection == true)
         {
-            services.AddAbsoluteAntiforgery();
+            services.AddFileFormulaAntiforgery();
         }
 
         return services;
@@ -773,7 +773,7 @@ public static class WebApplicationBuilderExtensions
     /// </summary>
     /// <param name="services">The service collection.</param>
     /// <returns>The <paramref name="services"/> instance.</returns>
-    public static IServiceCollection AddAbsoluteAntiforgery(this IServiceCollection services)
+    private static IServiceCollection AddFileFormulaAntiforgery(this IServiceCollection services)
     {
         services.AddAntiforgery(options =>
         {
@@ -793,7 +793,7 @@ public static class WebApplicationBuilderExtensions
     /// <param name="services">The service collection.</param>
     /// <param name="policies">The authorization policies to register.</param>
     /// <returns>The <paramref name="services"/> instance.</returns>
-    public static IServiceCollection AddAbsoluteAuthorization(this IServiceCollection services, List<AuthPolicy>? policies)
+    private static IServiceCollection AddFileFormulaAuthorization(this IServiceCollection services, List<AuthPolicy>? policies)
     {
         if (policies is null || !policies.Any()) return services;
 

@@ -12,19 +12,19 @@
     <Authors>S Lalith Prasad</Authors>
     <Company>FileFormula</Company>
     <Copyright>Copyright © 2026 FileFormula. All Rights Reserved.</Copyright>
-    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+
+
+    <Description>Reusable ASP.NET Core Web API foundation library for FileFormula services. Includes
+      keyed Dapper repositories, storage providers, authentication, API versioning, NSwag, and
+      resilience utilities.</Description>
+
     <PackageContact>laliths@fileformula.com</PackageContact>
     <RepositoryUrl>https://gitlab.com/fileformula/FileFormula.Api.Infrastructure.git</RepositoryUrl>
     <PackageProjectUrl>https://gitlab.com/fileformula/FileFormula.Api.Infrastructure</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
-
-    <Description>Reusable ASP.NET Core Web API foundation library for FileFormula services. Includes keyed Dapper repositories, storage providers, authentication, API versioning, NSwag, and
-      resilience utilities.</Description>
-
     <PackageTags>aspnetcore;webapi;dotnet;fileformula;dapper;infrastructure;microservices</PackageTags>
-
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageReleaseNotes>Initial migration to FileFormula namespace.</PackageReleaseNotes>
 
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
@@ -43,6 +43,7 @@
 
     <None Include="../../CHANGELOG.md" Pack="true" PackagePath="/" />
     <None Include="../../README.md" Pack="true" PackagePath="/" />
+    <None Include="../../LICENSE.txt" Pack="true" PackagePath="/" />
 
     <Content Include="nlog.settings.json">
       <Pack>true</Pack>

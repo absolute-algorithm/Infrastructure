@@ -16,21 +16,33 @@
     <RepositoryUrl>https://gitlab.com/fileformula/FileFormula.Api.Infrastructure.git</RepositoryUrl>
     <PackageProjectUrl>https://gitlab.com/fileformula/FileFormula.Api.Infrastructure</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
-    
+
     <Deterministic>true</Deterministic>
-    <ContinuousIntegrationBuild Condition="'$(TF_BUILD)' == 'true' Or '$(GITLAB_CI)' == 'true'">true</ContinuousIntegrationBuild>
+    <ContinuousIntegrationBuild Condition="'$(GITLAB_CI)' == 'true'">true</ContinuousIntegrationBuild>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
+
     <IncludeSymbols>true</IncludeSymbols>
+    <IncludeSource>true</IncludeSource>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    
+
     <LangVersion>latest</LangVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    
-    <Description>Reusable ASP.NET Core Web API foundation library for FileFormula services. Includes keyed Dapper repositories, storage providers, authentication, API versioning, NSwag, and resilience utilities.</Description>
+    <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
+
+    <Description>Reusable ASP.NET Core Web API foundation library for FileFormula services. Includes
+      keyed Dapper repositories, storage providers, authentication, API versioning, NSwag, and
+      resilience utilities.</Description>
+    <PackageTags>aspnetcore;webapi;dotnet;fileformula;dapper;infrastructure;microservices</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-</PropertyGroup>
+    <PackageReleaseNotes>See CHANGELOG.md for details.</PackageReleaseNotes>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
@@ -38,45 +50,36 @@
     <None Include="../../CHANGELOG.md" Pack="true" PackagePath="/" />
     <None Include="../../README.md" Pack="true" PackagePath="/" />
     <None Include="../../LICENSE.txt" Pack="true" PackagePath="/" />
-
     <Content Include="nlog.settings.json">
       <Pack>true</Pack>
       <PackagePath>contentFiles/any/any/nlog.settings.json;buildTransitive/nlog.settings.json</PackagePath>
       <PackageCopyToOutput>true</PackageCopyToOutput>
       <BuildAction>Content</BuildAction>
-    </Content>
-    <Content Include="nlog.settings.json" Condition=" '$(Configuration)' == 'Debug' ">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitLab" Version="8.0.0" PrivateAssets="All"/>
+    <PackageReference Include="Microsoft.SourceLink.GitLab" Version="8.0.0" PrivateAssets="All" />
 
     <PackageReference Include="AWSSDK.S3" Version="4.0.19" />
     <PackageReference Include="NLog.Web.AspNetCore" Version="6.1.0" />
-
     <PackageReference Include="Dapper" Version="2.1.72" />
     <PackageReference Include="CsvHelper" Version="33.0.1" />
     <PackageReference Include="Npgsql" Version="10.0.1" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.4" />
-
     <PackageReference Include="Minio" Version="7.0.0" />
     <PackageReference Include="Azure.Storage.Blobs" Version="12.23.0" />
     <PackageReference Include="Google.Cloud.Storage.V1" Version="4.10.0" />
-
     <PackageReference Include="Minio.AspNetCore.HealthChecks" Version="6.0.1" />
     <PackageReference Include="AspNetCore.HealthChecks.AzureStorage" Version="7.0.0" />
     <PackageReference Include="AspNetCore.HealthChecks.NpgSql" Version="9.0.0" />
     <PackageReference Include="AspNetCore.HealthChecks.SqlServer" Version="9.0.0" />
-
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.5" />
     <PackageReference Include="Asp.Versioning.Mvc" Version="8.1.0" />
     <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.0" />
-
     <PackageReference Include="NSwag.AspNetCore" Version="14.6.3" />
     <PackageReference Include="NSwag.Generation.AspNetCore" Version="14.6.3" />
-
     <PackageReference Include="Polly" Version="8.6.6" />
   </ItemGroup>
 </Project>

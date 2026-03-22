@@ -5,7 +5,7 @@ stages:
 variables:
   PROJECT_PATH: "src/FileFormula.Api.Infrastructure/FileFormula.Api.Infrastructure.csproj"
   PACKAGE_ID: "FileFormula.Api.Infrastructure"
-  # Official NuGet.org V3 Source
+  # V3 is the modern standard for NuGet.org
   NUGET_SOURCE: "https://api.nuget.org/v3/index.json"
 
 .build_base:
@@ -34,10 +34,11 @@ publish_dev:
   image: mcr.microsoft.com/dotnet/sdk:10.0
   needs: ["build_dev"]
   script:
-    - dotnet nuget push ./dist/*.nupkg --source $NUGET_SOURCE --api-key $NUGET_ORG_API_KEY --skip-duplicate
+    # Use quotes around variables and add --no-symbols to keep it clean if not needed
+    - dotnet nuget push "./dist/*.nupkg" --source "$NUGET_SOURCE" --api-key "$NUGET_ORG_API_KEY" --skip-duplicate --no-symbols true
   rules:
     - if: $CI_COMMIT_BRANCH == "dev"
-      when: manual # Keeps your manual approval button
+      when: manual 
 
 # ==========================================
 # 2. MAIN: 1.0.0 (Stable) -> NuGet.org
@@ -56,7 +57,7 @@ publish_main:
   image: mcr.microsoft.com/dotnet/sdk:10.0
   needs: ["build_main"]
   script:
-    - dotnet nuget push ./dist/*.nupkg --source $NUGET_SOURCE --api-key $NUGET_ORG_API_KEY --skip-duplicate
+    - dotnet nuget push "./dist/*.nupkg" --source "$NUGET_SOURCE" --api-key "$NUGET_ORG_API_KEY" --skip-duplicate --no-symbols true
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
       when: manual

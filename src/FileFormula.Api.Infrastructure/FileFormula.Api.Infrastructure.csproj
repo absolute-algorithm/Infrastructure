@@ -81,9 +81,4 @@
 
     <PackageReference Include="Polly" Version="8.6.6" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Enums/" />
-  </ItemGroup>
-
 </Project>

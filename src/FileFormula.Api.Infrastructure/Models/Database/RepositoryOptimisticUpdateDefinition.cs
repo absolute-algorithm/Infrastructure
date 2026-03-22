@@ -1,7 +1,7 @@
 namespace FileFormula.Api.Infrastructure.Models.Database;
 
 /// <summary>
-/// Describes the SQL statements required to perform an optimistic-concurrency update through <see cref="Common.Database.Repository"/>.
+/// Describes the SQL statements required to perform an optimistic-concurrency update through <see cref="Infrastructure.Database.Repository"/>.
 /// </summary>
 public class RepositoryOptimisticUpdateDefinition
 {

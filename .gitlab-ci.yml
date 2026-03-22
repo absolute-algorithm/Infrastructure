@@ -5,7 +5,6 @@ stages:
 variables:
   PROJECT_PATH: "src/FileFormula.Api.Infrastructure/FileFormula.Api.Infrastructure.csproj"
   PACKAGE_ID: "FileFormula.Api.Infrastructure"
-  # V3 is the modern standard for NuGet.org
   NUGET_SOURCE: "https://api.nuget.org/v3/index.json"
 
 .build_base:
@@ -34,8 +33,12 @@ publish_dev:
   image: mcr.microsoft.com/dotnet/sdk:10.0
   needs: ["build_dev"]
   script:
-    # Use quotes around variables and add --no-symbols to keep it clean if not needed
-    - dotnet nuget push "./dist/*.nupkg" --source "$NUGET_SOURCE" --api-key "$NUGET_ORG_API_KEY" --skip-duplicate --no-symbols true
+    - |
+      if [ -z "$NUGET_ORG_API_KEY" ]; then 
+        echo "ERROR: NUGET_ORG_API_KEY is not defined in GitLab CI/CD Variables"; 
+        exit 1; 
+      fi
+    - dotnet nuget push "./dist/*.nupkg" --api-key "$NUGET_ORG_API_KEY" --source "$NUGET_SOURCE" --skip-duplicate --no-symbols true
   rules:
     - if: $CI_COMMIT_BRANCH == "dev"
       when: manual 
@@ -57,7 +60,12 @@ publish_main:
   image: mcr.microsoft.com/dotnet/sdk:10.0
   needs: ["build_main"]
   script:
-    - dotnet nuget push "./dist/*.nupkg" --source "$NUGET_SOURCE" --api-key "$NUGET_ORG_API_KEY" --skip-duplicate --no-symbols true
+    - |
+      if [ -z "$NUGET_ORG_API_KEY" ]; then 
+        echo "ERROR: NUGET_ORG_API_KEY is not defined"; 
+        exit 1; 
+      fi
+    - dotnet nuget push "./dist/*.nupkg" --api-key "$NUGET_ORG_API_KEY" --source "$NUGET_SOURCE" --skip-duplicate --no-symbols true
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
       when: manual

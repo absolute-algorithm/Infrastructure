@@ -1,24 +1,16 @@
-
 # FileFormula.Api.Infrastructure
 
+Reusable ASP.NET Core Web API infrastructure library for rapid, secure, and maintainable service development. Includes database, storage, authentication, resilience, OpenAPI, and more—fully pluggable and opt-in.
 
-Reusable ASP.NET Core Web API infrastructure library. Configure once, get databases, storage, auth, resilience, docs, and more — wired automatically.
+## Installation
 
-
+From NuGet.org:
 ```bash
 dotnet add package FileFormula.Api.Infrastructure
 ```
 
----
 
-To use the package from the GitLab NuGet feed:
-
-```bash
-dotnet nuget add source "https://gitlab.com/api/v4/groups/127290252/-/packages/nuget/index.json" --name FileFormulaOrg --username <your-gitlab-username> --password <your-personal-access-token> --store-password-in-clear-text
-dotnet add package FileFormula.Api.Infrastructure
-```
-
-> Targets `net10.0`. Bundles Dapper, Polly, NSwag, NLog, CsvHelper, and provider SDKs for S3, Azure Blob, GCP Storage, and MinIO.
+> Targets `net10.0`. Bundles Dapper, Polly, NSwag, NLog, CsvHelper, and storage SDKs for S3, Azure Blob, GCP, and MinIO.
 
 ---
 
@@ -30,8 +22,7 @@ var builder = WebApplication.CreateBuilder(args);
 var appConfig = new ApplicationConfiguration
 {
     EnableRelationalDatabase = true,
-    DatabasePolicies =
-    [
+    DatabasePolicies = [
         new DatabasePolicy
         {
             Name = "primary",
@@ -41,23 +32,100 @@ var appConfig = new ApplicationConfiguration
     ],
     ConfigureAuthentication = true,
     ConfigureAuthorization = true,
-    AuthManifest = new AuthManifest
-    {
-        EnableJwt = true,
-        EnableCookies = false
-    }
+    AuthManifest = new AuthManifest { EnableJwt = true }
 };
 
 builder.RegisterAbsoluteWebApplicationBuilder(appConfig);
-
 var app = builder.Build();
-
 app.UseAbsolutePipeline(appConfig);
-
 app.Run();
 ```
 
-Two calls. That's it. The library validates config, registers services, and builds the middleware pipeline.
+---
+
+## Configuration
+
+- All features are opt-in via `ApplicationConfiguration`.
+- Secrets (DB, JWT, storage, API keys) are resolved from environment variables.
+- Supports config binding from `appsettings.json`:
+  ```csharp
+  var appConfig = builder.Configuration
+      .GetSection("FileFormulaApiInfrastructure")
+      .Get<ApplicationConfiguration>()
+      ?? new ApplicationConfiguration();
+  ```
+
+---
+
+## Features
+
+### Database
+
+- Dapper-based, transaction-aware repositories.
+- Supports PostgreSQL and SQL Server.
+- Request-scoped transactions, optimistic concurrency, paged queries, and resilience policies.
+
+### Storage
+
+- Keyed `StorageService` for S3, Azure Blob, GCP, MinIO.
+- Automatic filename sanitization.
+
+### HTTP Clients
+
+- Named, resilient clients via `HttpClientPolicy` and Polly.
+
+### Authentication & Authorization
+
+- JWT, cookies, API key, and hybrid auth.
+- Policy-based and attribute-based authorization.
+
+### Rate Limiting & Idempotency
+
+- Flexible rate limiting (IP, user, endpoint, etc.).
+- Idempotency for safe retries on POST/PUT/PATCH.
+
+### Webhook Signature Validation
+
+- HMAC-based signature verification for secure webhooks.
+
+### API Versioning & Swagger
+
+- Flexible versioning (header, query, etc.).
+- NSwag-based OpenAPI docs with security integration.
+
+### Health Checks
+
+- Auto-registers checks for all configured services.
+
+### Error Handling
+
+- Standardized error envelope and codes.
+- Global model validation.
+
+---
+
+## Utilities
+
+Includes helpers for JWT, hashing, encryption, CSV, ETags, slugs, and more.
+
+---
+
+## Example: Full Configuration
+
+See the full example in the source for advanced scenarios (multiple DBs, storage, custom policies, etc.).
+
+---
+
+## Tips
+
+- Prefer interpolated queries for SQL safety.
+- Use environment variables for all secrets.
+- Implement `IIdempotencyStore` for distributed idempotency.
+- Keep your `JWT_SECRET` strong and rotated.
+
+---
+
+For more, see the source code and XML docs.
 
 You can also bind from `appsettings.json`:
 

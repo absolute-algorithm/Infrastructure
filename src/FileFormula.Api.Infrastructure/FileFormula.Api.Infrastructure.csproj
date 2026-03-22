@@ -13,35 +13,24 @@
     <Company>FileFormula</Company>
     <Copyright>Copyright © 2026 FileFormula. All Rights Reserved.</Copyright>
 
-
-    <Description>Reusable ASP.NET Core Web API foundation library for FileFormula services. Includes
-      keyed Dapper repositories, storage providers, authentication, API versioning, NSwag, and
-      resilience utilities.</Description>
-
-    <PackageContact>laliths@fileformula.com</PackageContact>
     <RepositoryUrl>https://gitlab.com/fileformula/FileFormula.Api.Infrastructure.git</RepositoryUrl>
     <PackageProjectUrl>https://gitlab.com/fileformula/FileFormula.Api.Infrastructure</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageTags>aspnetcore;webapi;dotnet;fileformula;dapper;infrastructure;microservices</PackageTags>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
+    
     <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(TF_BUILD)' == 'true' Or '$(GITLAB_CI)' == 'true'">true</ContinuousIntegrationBuild>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <EmbedUntrackedSources>true</EmbedUntrackedSources>
-    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
-    <EnableSourceLink>true</EnableSourceLink>
-    <CompilerFlags>$(CompilerFlags) /deterministic /langversion:latest</CompilerFlags>
-    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-
-    <IncludeBuildOutput>true</IncludeBuildOutput>
-    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-  </PropertyGroup>
+    
+    <LangVersion>latest</LangVersion>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    
+    <Description>Reusable ASP.NET Core Web API foundation library for FileFormula services. Includes keyed Dapper repositories, storage providers, authentication, API versioning, NSwag, and resilience utilities.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+</PropertyGroup>
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
@@ -62,6 +51,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitLab" Version="8.0.0" PrivateAssets="All"/>
+
     <PackageReference Include="AWSSDK.S3" Version="4.0.19" />
     <PackageReference Include="NLog.Web.AspNetCore" Version="6.1.0" />
 

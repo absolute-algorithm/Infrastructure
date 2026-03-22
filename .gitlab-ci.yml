@@ -3,12 +3,10 @@ stages:
   - deploy
 
 variables:
-  # UPDATED: Matches your screenshot structure exactly
   PROJECT_PATH: "src/FileFormula.Api.Infrastructure/FileFormula.Api.Infrastructure.csproj"
   PACKAGE_ID: "FileFormula.Api.Infrastructure"
   ORG_NUGET_SOURCE: "https://gitlab.com/api/v4/groups/127290252/-/packages/nuget/index.json"
 
-# --- REUSABLE BUILD SETTINGS ---
 .build_base:
   image: mcr.microsoft.com/dotnet/sdk:10.0
   stage: build
@@ -36,7 +34,8 @@ publish_dev:
   needs: ["build_dev"]
   script:
     - dotnet nuget add source "$ORG_NUGET_SOURCE" --name FileFormulaOrg --username gitlab-ci-token --password $CI_JOB_TOKEN --store-password-in-clear-text
-    - dotnet nuget push ./dist/*.nupkg --source FileFormulaOrg --skip-duplicate
+    # FIXED: Added --api-key $CI_JOB_TOKEN to bypass the authentication error
+    - dotnet nuget push ./dist/*.nupkg --source FileFormulaOrg --api-key $CI_JOB_TOKEN --skip-duplicate
   rules:
     - if: $CI_COMMIT_BRANCH == "dev"
       when: manual
@@ -59,7 +58,8 @@ publish_main:
   needs: ["build_main"]
   script:
     - dotnet nuget add source "$ORG_NUGET_SOURCE" --name FileFormulaOrg --username gitlab-ci-token --password $CI_JOB_TOKEN --store-password-in-clear-text
-    - dotnet nuget push ./dist/*.nupkg --source FileFormulaOrg --skip-duplicate
+    # FIXED: Added --api-key $CI_JOB_TOKEN
+    - dotnet nuget push ./dist/*.nupkg --source FileFormulaOrg --api-key $CI_JOB_TOKEN --skip-duplicate
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
       when: manual

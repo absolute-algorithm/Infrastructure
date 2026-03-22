@@ -3,8 +3,8 @@ stages:
   - deploy
 
 variables:
-  # DOUBLE CHECK THESE PATHS (Case sensitive!)
-  PROJECT_PATH: "src/Common/Common.csproj"
+  # UPDATED: Matches your screenshot structure exactly
+  PROJECT_PATH: "src/FileFormula.Api.Infrastructure/FileFormula.Api.Infrastructure.csproj"
   PACKAGE_ID: "FileFormula.Api.Infrastructure"
   ORG_NUGET_SOURCE: "https://gitlab.com/api/v4/groups/127290252/-/packages/nuget/index.json"
 
@@ -12,9 +12,6 @@ variables:
 .build_base:
   image: mcr.microsoft.com/dotnet/sdk:10.0
   stage: build
-  before_script:
-    - echo "Checking if file exists..."
-    - ls -R src/  # This will list everything in src/ to help you debug paths
   artifacts:
     paths:
       - ./dist/*.nupkg
@@ -42,7 +39,7 @@ publish_dev:
     - dotnet nuget push ./dist/*.nupkg --source FileFormulaOrg --skip-duplicate
   rules:
     - if: $CI_COMMIT_BRANCH == "dev"
-      when: manual # Added approval as requested
+      when: manual
 
 # ==========================================
 # 2. MAIN PIPELINE: 1.0.0 (Stable)

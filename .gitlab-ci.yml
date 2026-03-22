@@ -5,6 +5,7 @@ stages:
 variables:
   PROJECT_PATH: "src/FileFormula.Api.Infrastructure/FileFormula.Api.Infrastructure.csproj"
   PACKAGE_ID: "FileFormula.Api.Infrastructure"
+  # Official NuGet.org V3 Source
   NUGET_SOURCE: "https://api.nuget.org/v3/index.json"
 
 .build_base:
@@ -38,7 +39,7 @@ publish_dev:
         echo "ERROR: NUGET_ORG_API_KEY is not defined in GitLab CI/CD Variables"; 
         exit 1; 
       fi
-    - dotnet nuget push "./dist/*.nupkg" --api-key "$NUGET_ORG_API_KEY" --source "$NUGET_SOURCE" --skip-duplicate --no-symbols true
+    - dotnet nuget push "./dist/*.nupkg" --api-key "$NUGET_ORG_API_KEY" --source "$NUGET_SOURCE" --skip-duplicate --no-symbols
   rules:
     - if: $CI_COMMIT_BRANCH == "dev"
       when: manual 
@@ -65,7 +66,7 @@ publish_main:
         echo "ERROR: NUGET_ORG_API_KEY is not defined"; 
         exit 1; 
       fi
-    - dotnet nuget push "./dist/*.nupkg" --api-key "$NUGET_ORG_API_KEY" --source "$NUGET_SOURCE" --skip-duplicate --no-symbols true
+    - dotnet nuget push "./dist/*.nupkg" --api-key "$NUGET_ORG_API_KEY" --source "$NUGET_SOURCE" --skip-duplicate --no-symbols
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
       when: manual

@@ -23,12 +23,17 @@
     <PackageProjectUrl>https://gitlab.com/fileformula/FileFormula.Api.Infrastructure</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>aspnetcore;webapi;dotnet;fileformula;dapper;infrastructure;microservices</PackageTags>
-    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
 
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
     <Deterministic>true</Deterministic>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <EnableSourceLink>true</EnableSourceLink>
+    <CompilerFlags>$(CompilerFlags) /deterministic /langversion:latest</CompilerFlags>
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <IncludeSymbols>true</IncludeSymbols>
@@ -50,6 +55,8 @@
       <PackagePath>contentFiles/any/any/nlog.settings.json;buildTransitive/nlog.settings.json</PackagePath>
       <PackageCopyToOutput>true</PackageCopyToOutput>
       <BuildAction>Content</BuildAction>
+    </Content>
+    <Content Include="nlog.settings.json" Condition=" '$(Configuration)' == 'Debug' ">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

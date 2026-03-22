@@ -17,11 +17,13 @@
     <PackageProjectUrl>https://gitlab.com/fileformula/FileFormula.Api.Infrastructure</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
 
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
     <Deterministic>true</Deterministic>
     <ContinuousIntegrationBuild Condition="'$(GITLAB_CI)' == 'true'">true</ContinuousIntegrationBuild>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
-
+    
     <IncludeSymbols>true</IncludeSymbols>
     <IncludeSource>true</IncludeSource>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
@@ -37,11 +39,6 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageReleaseNotes>See CHANGELOG.md for details.</PackageReleaseNotes>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-    <DebugType>portable</DebugType>
-    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
   <ItemGroup>

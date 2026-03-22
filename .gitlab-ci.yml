@@ -5,7 +5,6 @@ stages:
 variables:
   PROJECT_PATH: "src/FileFormula.Api.Infrastructure/FileFormula.Api.Infrastructure.csproj"
   PACKAGE_ID: "FileFormula.Api.Infrastructure"
-  # Official NuGet.org V3 Source
   NUGET_SOURCE: "https://api.nuget.org/v3/index.json"
 
 .build_base:
@@ -14,6 +13,7 @@ variables:
   artifacts:
     paths:
       - ./dist/*.nupkg
+      - ./dist/*.snupkg  # Added to ensure symbols are captured
     expire_in: 1 week
 
 # ==========================================
@@ -25,7 +25,8 @@ build_dev:
     - VERSION=$(grep -oPm1 '(?<=<Version>)[^<]+' $PROJECT_PATH | tr -d '[:space:]')
     - FULL_VERSION="$VERSION-beta.$CI_PIPELINE_IID"
     - echo "Packing Dev Version $FULL_VERSION"
-    - dotnet pack $PROJECT_PATH -c Release -o ./dist /p:PackageId=$PACKAGE_ID /p:PackageVersion=$FULL_VERSION
+    # Added /p:ContinuousIntegrationBuild=true to fix Deterministic/SourceLink checks
+    - dotnet pack $PROJECT_PATH -c Release -o ./dist /p:PackageId=$PACKAGE_ID /p:PackageVersion=$FULL_VERSION /p:ContinuousIntegrationBuild=true
   rules:
     - if: $CI_COMMIT_BRANCH == "dev"
 
@@ -36,10 +37,11 @@ publish_dev:
   script:
     - |
       if [ -z "$NUGET_ORG_API_KEY" ]; then 
-        echo "ERROR: NUGET_ORG_API_KEY is not defined in GitLab CI/CD Variables"; 
+        echo "ERROR: NUGET_ORG_API_KEY is not defined"; 
         exit 1; 
       fi
-    - dotnet nuget push "./dist/*.nupkg" --api-key "$NUGET_ORG_API_KEY" --source "$NUGET_SOURCE" --skip-duplicate --no-symbols
+    # Removed --no-symbols so your .snupkg file actually gets pushed
+    - dotnet nuget push "./dist/*.nupkg" --api-key "$NUGET_ORG_API_KEY" --source "$NUGET_SOURCE" --skip-duplicate
   rules:
     - if: $CI_COMMIT_BRANCH == "dev"
       when: manual 
@@ -52,7 +54,7 @@ build_main:
   script:
     - VERSION=$(grep -oPm1 '(?<=<Version>)[^<]+' $PROJECT_PATH | tr -d '[:space:]')
     - echo "Packing Production Version $VERSION"
-    - dotnet pack $PROJECT_PATH -c Release -o ./dist /p:PackageId=$PACKAGE_ID /p:PackageVersion=$VERSION
+    - dotnet pack $PROJECT_PATH -c Release -o ./dist /p:PackageId=$PACKAGE_ID /p:PackageVersion=$VERSION /p:ContinuousIntegrationBuild=true
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
 
@@ -66,7 +68,7 @@ publish_main:
         echo "ERROR: NUGET_ORG_API_KEY is not defined"; 
         exit 1; 
       fi
-    - dotnet nuget push "./dist/*.nupkg" --api-key "$NUGET_ORG_API_KEY" --source "$NUGET_SOURCE" --skip-duplicate --no-symbols
+    - dotnet nuget push "./dist/*.nupkg" --api-key "$NUGET_ORG_API_KEY" --source "$NUGET_SOURCE" --skip-duplicate
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
       when: manual

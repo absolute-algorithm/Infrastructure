@@ -5,7 +5,8 @@ stages:
 variables:
   PROJECT_PATH: "src/FileFormula.Api.Infrastructure/FileFormula.Api.Infrastructure.csproj"
   PACKAGE_ID: "FileFormula.Api.Infrastructure"
-  ORG_NUGET_SOURCE: "https://gitlab.com/api/v4/groups/127290252/-/packages/nuget/index.json"
+  # Official NuGet.org V3 Source
+  NUGET_SOURCE: "https://api.nuget.org/v3/index.json"
 
 .build_base:
   image: mcr.microsoft.com/dotnet/sdk:10.0
@@ -16,7 +17,7 @@ variables:
     expire_in: 1 week
 
 # ==========================================
-# 1. DEV PIPELINE: 1.0.0-beta.X
+# 1. DEV: 1.0.0-beta.X -> NuGet.org
 # ==========================================
 build_dev:
   extends: .build_base
@@ -33,15 +34,13 @@ publish_dev:
   image: mcr.microsoft.com/dotnet/sdk:10.0
   needs: ["build_dev"]
   script:
-    - dotnet nuget add source "$ORG_NUGET_SOURCE" --name FileFormulaOrg --username gitlab-ci-token --password $CI_JOB_TOKEN --store-password-in-clear-text
-    # FIXED: Added --api-key $CI_JOB_TOKEN to bypass the authentication error
-    - dotnet nuget push ./dist/*.nupkg --source FileFormulaOrg --api-key $CI_JOB_TOKEN --skip-duplicate
+    - dotnet nuget push ./dist/*.nupkg --source $NUGET_SOURCE --api-key $NUGET_ORG_API_KEY --skip-duplicate
   rules:
     - if: $CI_COMMIT_BRANCH == "dev"
-      when: manual
+      when: manual # Keeps your manual approval button
 
 # ==========================================
-# 2. MAIN PIPELINE: 1.0.0 (Stable)
+# 2. MAIN: 1.0.0 (Stable) -> NuGet.org
 # ==========================================
 build_main:
   extends: .build_base
@@ -57,9 +56,7 @@ publish_main:
   image: mcr.microsoft.com/dotnet/sdk:10.0
   needs: ["build_main"]
   script:
-    - dotnet nuget add source "$ORG_NUGET_SOURCE" --name FileFormulaOrg --username gitlab-ci-token --password $CI_JOB_TOKEN --store-password-in-clear-text
-    # FIXED: Added --api-key $CI_JOB_TOKEN
-    - dotnet nuget push ./dist/*.nupkg --source FileFormulaOrg --api-key $CI_JOB_TOKEN --skip-duplicate
+    - dotnet nuget push ./dist/*.nupkg --source $NUGET_SOURCE --api-key $NUGET_ORG_API_KEY --skip-duplicate
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
       when: manual

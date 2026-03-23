@@ -1,0 +1,5 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/AbsoluteAlgorithm.Infrastructure/AbsoluteAlgorithm.Infrastructure.csproj" />
+  </Folder>
+</Solution>

@@ -1,4 +1,4 @@
-# FileFormula.Api.Infrastructure
+# AbsoluteAlgorithm.Infrastructure
 
 Reusable ASP.NET Core Web API infrastructure library for rapid, secure, and maintainable service development. Includes database, storage, authentication, resilience, OpenAPI, and more—fully pluggable and opt-in.
 
@@ -6,7 +6,7 @@ Reusable ASP.NET Core Web API infrastructure library for rapid, secure, and main
 
 From NuGet.org:
 ```bash
-dotnet add package FileFormula.Api.Infrastructure
+dotnet add package AbsoluteAlgorithm.Infrastructure
 ```
 
 
@@ -249,26 +249,12 @@ ApplicationConfiguration appConfig = new ApplicationConfiguration
     },
 };
 
-builder.RegisterFileFormulaWebApplicationBuilder(appConfig);
+builder.AddAbsoluteServices(appConfig);
 
 WebApplication app = builder.Build();
-app.UseFileFormulaPipeline(appConfig);
+app.UseAbsolutePipeline(appConfig);
 app.Run();
 ```
-
----
-
-## Configuration
-
-- All features are opt-in via `ApplicationConfiguration`.
-- Secrets (DB, JWT, storage, API keys) are resolved from environment variables.
-- Supports config binding from `appsettings.json`:
-  ```csharp
-  var appConfig = builder.Configuration
-      .GetSection("FileFormulaApiInfrastructure")
-      .Get<ApplicationConfiguration>()
-      ?? new ApplicationConfiguration();
-  ```
 
 ---
 
@@ -337,19 +323,6 @@ See the full example in the source for advanced scenarios (multiple DBs, storage
 - Use environment variables for all secrets.
 - Implement `IIdempotencyStore` for distributed idempotency.
 - Keep your `JWT_SECRET` strong and rotated.
-
----
-
-For more, see the source code and XML docs.
-
-You can also bind from `appsettings.json`:
-
-```csharp
-var appConfig = builder.Configuration
-    .GetSection("FileFormulaApiInfrastructure")
-    .Get<ApplicationConfiguration>()
-    ?? new ApplicationConfiguration();
-```
 
 ---
 
@@ -690,7 +663,7 @@ ApplicationConfiguration appConfig = new ApplicationConfiguration
 
 
 var app = builder.Build();
-app.UseFileFormulaPipeline(appConfig);
+app.UseAbsolutePipeline(appConfig);
 app.Run();
 ```
 ```csharp
@@ -778,7 +751,7 @@ new AuthManifest
 }
 ```
 
-**JWT**: requires `JWT_SECRET` env var (min 32 chars). Defaults: issuer `FileFormula.Identity`, audience `FileFormula.Apps`.
+**JWT**: requires `JWT_SECRET` env var (min 32 chars). Defaults: issuer `Absolute.Identity`, audience `Absolute.Apps`.
 
 **Cookies**: registers `AbsoluteAuth` cookie — `HttpOnly`, `SameSite=Strict`, `Secure=Always`, 7-day sliding expiry. Login redirects become `401`.
 
@@ -1004,7 +977,7 @@ throw ApiExceptions.FromCode("E410", "Resource gone");
 
 ## Middleware Pipeline
 
-`UseFileFormulaPipeline` wires everything in this order:
+`UseAbsolutePipeline` wires everything in this order:
 
 1. Forwarded headers
 2. HSTS + HTTPS redirect (non-dev)

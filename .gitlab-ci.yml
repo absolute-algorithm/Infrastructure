@@ -3,8 +3,8 @@ stages:
   - deploy
 
 variables:
-  PROJECT_PATH: "src/FileFormula.Api.Infrastructure/FileFormula.Api.Infrastructure.csproj"
-  PACKAGE_ID: "FileFormula.Api.Infrastructure"
+  PROJECT_PATH: "src/AbsoluteAlgorithm.Infrastructure/AbsoluteAlgorithm.Infrastructure.csproj"
+  PACKAGE_ID: "AbsoluteAlgorithm.Infrastructure"
   NUGET_SOURCE: "https://api.nuget.org/v3/index.json"
 
 .build_base:
@@ -13,7 +13,7 @@ variables:
   artifacts:
     paths:
       - ./dist/*.nupkg
-      - ./dist/*.snupkg  # Added to ensure symbols are captured
+      - ./dist/*.snupkg # Added to ensure symbols are captured
     expire_in: 1 week
 
 # ==========================================
@@ -44,7 +44,7 @@ publish_dev:
     - dotnet nuget push "./dist/*.nupkg" --api-key "$NUGET_ORG_API_KEY" --source "$NUGET_SOURCE" --skip-duplicate
   rules:
     - if: $CI_COMMIT_BRANCH == "dev"
-      when: manual 
+      when: manual
 
 # ==========================================
 # 2. MAIN: 1.0.0 (Stable) -> NuGet.org

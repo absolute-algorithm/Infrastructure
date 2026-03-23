@@ -17,13 +17,13 @@ variables:
     expire_in: 1 week
 
 # ==========================================
-# 1. DEV: 1.0.0-beta.X -> NuGet.org
+# 1. DEV: 1.0.0-dev.X -> NuGet.org
 # ==========================================
 build_dev:
   extends: .build_base
   script:
     - VERSION=$(grep -oPm1 '(?<=<Version>)[^<]+' $PROJECT_PATH | tr -d '[:space:]')
-    - FULL_VERSION="$VERSION-beta.$CI_PIPELINE_IID"
+    - FULL_VERSION="$VERSION-dev.$CI_PIPELINE_IID"
     - echo "Packing Dev Version $FULL_VERSION"
     # Added /p:ContinuousIntegrationBuild=true to fix Deterministic/SourceLink checks
     - dotnet pack $PROJECT_PATH -c Release -o ./dist /p:PackageId=$PACKAGE_ID /p:PackageVersion=$FULL_VERSION /p:ContinuousIntegrationBuild=true

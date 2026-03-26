@@ -1,0 +1,51 @@
+name: Main - Deploy Production Package
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Extract Version
+        id: prep
+        shell: bash
+        run: |
+          VERSION=$(grep -oPm1 '(?<=<Version>)[^<]+' src/AbsoluteAlgorithm.Infrastructure/AbsoluteAlgorithm.Infrastructure.csproj | tr -d '[:space:]')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Wait for Approval
+        uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ github.TOKEN }}
+          approvers: slalithprasad
+          minimum-approvals: 1
+          issue-title: "Deploy 'Infrastructure' Production: ${{ steps.prep.outputs.version }}"
+          issue-body: "Please approve the publish of the STABLE production version: ${{ steps.prep.outputs.version }}."
+
+      - name: Build & Pack Production
+        shell: bash
+        run: |
+          dotnet pack src/AbsoluteAlgorithm.Infrastructure/AbsoluteAlgorithm.Infrastructure.csproj -c Release -o ./dist \
+            /p:PackageId=AbsoluteAlgorithm.Infrastructure \
+            /p:PackageVersion=${{ steps.prep.outputs.version }}
+
+      - name: Push Production Package to NuGet
+        uses: actions/upload-artifact@v3
+        with:
+          name: nuget-package
+          path: ./dist

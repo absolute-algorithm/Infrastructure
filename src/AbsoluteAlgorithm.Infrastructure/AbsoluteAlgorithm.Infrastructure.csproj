@@ -13,8 +13,8 @@
     <Company>AbsoluteAlgorithm</Company>
     <Copyright>Copyright © 2026 AbsoluteAlgorithm. All Rights Reserved.</Copyright>
 
-    <RepositoryUrl>https://gitlab.com/AbsoluteAlgorithm/AbsoluteAlgorithm.Infrastructure.git</RepositoryUrl>
-    <PackageProjectUrl>https://gitlab.com/AbsoluteAlgorithm/AbsoluteAlgorithm.Infrastructure</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/absolute-algorithm/Infrastructure.git</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/absolute-algorithm/Infrastructure</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
 
     <DebugType>portable</DebugType>
@@ -33,9 +33,8 @@
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
 
     <Description>Reusable ASP.NET Core Web API foundation library for AbsoluteAlgorithm services.
-      Includes
-      keyed Dapper repositories, storage providers, authentication, API versioning, NSwag, and
-      resilience utilities.</Description>
+      Includes keyed Dapper repositories, storage providers, authentication, API versioning, NSwag,
+      and resilience utilities.</Description>
     <PackageTags>aspnetcore;webapi;dotnet;AbsoluteAlgorithm;dapper;infrastructure;microservices</PackageTags>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>

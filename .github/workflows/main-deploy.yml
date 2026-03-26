@@ -28,15 +28,6 @@ jobs:
           VERSION=$(grep -oPm1 '(?<=<Version>)[^<]+' src/AbsoluteAlgorithm.Infrastructure/AbsoluteAlgorithm.Infrastructure.csproj | tr -d '[:space:]')
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Wait for Approval
-        uses: trstringer/manual-approval@v1
-        with:
-          secret: ${{ github.TOKEN }}
-          approvers: slalithprasad
-          minimum-approvals: 1
-          issue-title: "Deploy 'Infrastructure' Production: ${{ steps.prep.outputs.version }}"
-          issue-body: "Please approve the publish of the STABLE production version: ${{ steps.prep.outputs.version }}."
-
       - name: Build & Pack Production
         shell: bash
         run: |

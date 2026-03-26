@@ -30,15 +30,6 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "full_version=$FULL_VERSION" >> $GITHUB_OUTPUT
 
-      - name: Wait for Approval
-        uses: trstringer/manual-approval@v1
-        with:
-          secret: ${{ github.TOKEN }}
-          approvers: slalithprasad
-          minimum-approvals: 1
-          issue-title: "Deploy 'Infrastructure' Pre-Release: ${{ steps.prep.outputs.full_version }}"
-          issue-body: "Please approve the publish of AbsoluteAlgorithm.Infrastructure version ${{ steps.prep.outputs.full_version }}."
-
       - name: Build & Pack BETA (Prerelease)
         shell: bash
         run: |

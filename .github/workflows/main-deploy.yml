@@ -8,9 +8,8 @@ on:
 jobs:
   publish-main:
     runs-on: ubuntu-latest
-    # Manual approval gate (Create 'Production' environment in Settings > Environments)
-    environment: Production 
     permissions:
+      issues: write
       contents: read
 
     steps:
@@ -26,23 +25,26 @@ jobs:
         id: prep
         shell: bash
         run: |
-          # Get version from csproj (e.g., 1.0.0)
           VERSION=$(grep -oPm1 '(?<=<Version>)[^<]+' src/AbsoluteAlgorithm.Infrastructure/AbsoluteAlgorithm.Infrastructure.csproj | tr -d '[:space:]')
           echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Wait for Approval
+        uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ github.TOKEN }}
+          approvers: slalithprasad
+          minimum-approvals: 1
+          issue-title: "Deploy 'Infrastructure' STABLE: ${{ steps.prep.outputs.version }}"
+          issue-body: "Final approval required for AbsoluteAlgorithm.Infrastructure version ${{ steps.prep.outputs.version }}."
 
       - name: Build & Pack Stable
         shell: bash
         run: |
-          dotnet pack src/AbsoluteAlgorithm.Infrastructure/AbsoluteAlgorithm.Infrastructure.csproj \
-            -c Release \
-            -o ./dist \
+          dotnet pack src/AbsoluteAlgorithm.Infrastructure/AbsoluteAlgorithm.Infrastructure.csproj -c Release -o ./dist \
             /p:PackageId=AbsoluteAlgorithm.Infrastructure \
-            /p:Version=${{ steps.prep.outputs.version }}
+            /p:PackageVersion=${{ steps.prep.outputs.version }}
 
       - name: Push to NuGet
         shell: bash
         run: |
-          dotnet nuget push ./dist/*.nupkg \
-            --api-key ${{ secrets.NUGET_API_KEY }} \
-            --source https://api.nuget.org/v3/index.json \
-            --skip-duplicate
+          dotnet nuget push ./dist/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate

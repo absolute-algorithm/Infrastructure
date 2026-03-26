@@ -26,7 +26,7 @@ jobs:
         shell: bash
         run: |
           VERSION=$(grep -oPm1 '(?<=<Version>)[^<]+' src/AbsoluteAlgorithm.Infrastructure/AbsoluteAlgorithm.Infrastructure.csproj | tr -d '[:space:]')
-          FULL_VERSION="$VERSION-dev.${{ github.run_number }}"
+          FULL_VERSION="$VERSION-beta.${{ github.run_number }}"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "full_version=$FULL_VERSION" >> $GITHUB_OUTPUT
 
@@ -36,12 +36,17 @@ jobs:
           secret: ${{ github.TOKEN }}
           approvers: slalithprasad
           minimum-approvals: 1
-          issue-title: "Deploy 'Infrastructure' Pre-Release: ${{ steps.prep.outputs.full_version }}"
-          issue-body: "Please approve the publish of AbsoluteAlgorithm.Infrastructure version ${{ steps.prep.outputs.full_version }}."
+          issue-title: "Deploy 'Infrastructure' BETA: ${{ steps.prep.outputs.full_version }}"
+          issue-body: "Please approve the publish of AbsoluteAlgorithm.Infrastructure version ${{ steps.prep.outputs.full_version }} to NuGet."
 
-      - name: Build & Pack Dev (Prerelease)
+      - name: Build & Pack BETA
         shell: bash
         run: |
           dotnet pack src/AbsoluteAlgorithm.Infrastructure/AbsoluteAlgorithm.Infrastructure.csproj -c Release -o ./dist \
             /p:PackageId=AbsoluteAlgorithm.Infrastructure \
             /p:PackageVersion=${{ steps.prep.outputs.full_version }}
+
+      - name: Push to NuGet
+        shell: bash
+        run: |
+          dotnet nuget push ./dist/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate

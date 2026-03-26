@@ -8,9 +8,11 @@ on:
 jobs:
   publish-dev:
     runs-on: ubuntu-latest
+    # This is the "Gate" that pauses the pipeline and asks for your approval
+    environment: Development 
     permissions:
-      issues: write
       contents: read
+      packages: write
 
     steps:
       - name: Checkout Code
@@ -25,7 +27,9 @@ jobs:
         id: prep
         shell: bash
         run: |
+          # Extract base version from csproj
           VERSION=$(grep -oPm1 '(?<=<Version>)[^<]+' src/AbsoluteAlgorithm.Infrastructure/AbsoluteAlgorithm.Infrastructure.csproj | tr -d '[:space:]')
+          # Append beta suffix with run number for unique prerelease versions
           FULL_VERSION="$VERSION-beta.${{ github.run_number }}"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "full_version=$FULL_VERSION" >> $GITHUB_OUTPUT
@@ -33,6 +37,17 @@ jobs:
       - name: Build & Pack BETA (Prerelease)
         shell: bash
         run: |
-          dotnet pack src/AbsoluteAlgorithm.Infrastructure/AbsoluteAlgorithm.Infrastructure.csproj -c Release -o ./dist \
+          dotnet pack src/AbsoluteAlgorithm.Infrastructure/AbsoluteAlgorithm.Infrastructure.csproj \
+            -c Release \
+            -o ./dist \
             /p:PackageId=AbsoluteAlgorithm.Infrastructure \
             /p:PackageVersion=${{ steps.prep.outputs.full_version }}
+
+      - name: Push to NuGet
+        shell: bash
+        run: |
+          # Note: Replace 'NUGET_API_KEY' with your actual secret name in GitHub
+          dotnet nuget push ./dist/*.nupkg \
+            --api-key ${{ secrets.NUGET_API_KEY }} \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate

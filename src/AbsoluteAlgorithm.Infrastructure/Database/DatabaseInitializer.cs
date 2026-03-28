@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using Npgsql;
 using Dapper;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
-using AbsoluteAlgorithm.Infrastructure.Enums;
+using AbsoluteAlgorithm.Core.Enums;
 
 namespace AbsoluteAlgorithm.Infrastructure.Database;
 

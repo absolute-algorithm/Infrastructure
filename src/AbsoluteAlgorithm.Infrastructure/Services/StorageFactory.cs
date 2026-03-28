@@ -1,8 +1,8 @@
 using System;
 using Amazon.S3;
 using Azure.Storage.Blobs;
-using AbsoluteAlgorithm.Infrastructure.Enums;
-using AbsoluteAlgorithm.Infrastructure.Models.Storage;
+using AbsoluteAlgorithm.Core.Enums;
+using AbsoluteAlgorithm.Core.Models.Storage;
 using Google.Cloud.Storage.V1;
 using Minio;
 

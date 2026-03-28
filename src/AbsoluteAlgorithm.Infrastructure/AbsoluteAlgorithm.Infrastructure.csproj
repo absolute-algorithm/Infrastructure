@@ -8,7 +8,7 @@
     <PackageId>AbsoluteAlgorithm.Infrastructure</PackageId>
     <AssemblyName>AbsoluteAlgorithm.Infrastructure</AssemblyName>
     <RootNamespace>AbsoluteAlgorithm.Infrastructure</RootNamespace>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <Authors>S Lalith Prasad</Authors>
     <Company>AbsoluteAlgorithm</Company>
     <Copyright>Copyright © 2026 AbsoluteAlgorithm. All Rights Reserved.</Copyright>
@@ -23,6 +23,10 @@
     <ContinuousIntegrationBuild Condition="'$(GITLAB_CI)' == 'true'">true</ContinuousIntegrationBuild>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
+
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+    <DeterministicSourcePaths>true</DeterministicSourcePaths>
+    <Optimize>true</Optimize>
 
     <IncludeSymbols>true</IncludeSymbols>
     <IncludeSource>true</IncludeSource>
@@ -42,8 +46,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
-
     <None Include="../../CHANGELOG.md" Pack="true" PackagePath="/" />
     <None Include="../../README.md" Pack="true" PackagePath="/" />
     <None Include="../../LICENSE.txt" Pack="true" PackagePath="/" />
@@ -57,8 +59,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitLab" Version="8.0.0" PrivateAssets="All" />
-
     <PackageReference Include="AWSSDK.S3" Version="4.0.19" />
     <PackageReference Include="NLog.Web.AspNetCore" Version="6.1.0" />
     <PackageReference Include="Dapper" Version="2.1.72" />
@@ -72,11 +72,10 @@
     <PackageReference Include="AspNetCore.HealthChecks.AzureStorage" Version="7.0.0" />
     <PackageReference Include="AspNetCore.HealthChecks.NpgSql" Version="9.0.0" />
     <PackageReference Include="AspNetCore.HealthChecks.SqlServer" Version="9.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.5" />
     <PackageReference Include="Asp.Versioning.Mvc" Version="8.1.0" />
     <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.0" />
     <PackageReference Include="NSwag.AspNetCore" Version="14.6.3" />
     <PackageReference Include="NSwag.Generation.AspNetCore" Version="14.6.3" />
-    <PackageReference Include="Polly" Version="8.6.6" />
+    <PackageReference Include="AbsoluteAlgorithm.Core" Version="1.0.0-beta.6" />
   </ItemGroup>
 </Project>

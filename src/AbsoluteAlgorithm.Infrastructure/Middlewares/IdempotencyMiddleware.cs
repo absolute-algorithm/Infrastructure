@@ -1,7 +1,7 @@
 using System.Text;
-using AbsoluteAlgorithm.Infrastructure.Constraints;
-using AbsoluteAlgorithm.Infrastructure.Exceptions;
-using AbsoluteAlgorithm.Infrastructure.Models.Idempotency;
+using AbsoluteAlgorithm.Core.Constraints;
+using AbsoluteAlgorithm.Core.Exceptions;
+using AbsoluteAlgorithm.Core.Models.Idempotency;
 using AbsoluteAlgorithm.Infrastructure.Services;
 using Microsoft.AspNetCore.Http;
 
@@ -51,7 +51,7 @@ public class IdempotencyMiddleware
         {
             if (_policy.RequireHeader)
             {
-                throw new ApiException(ERRORCODE.BADREQUEST, $"The {_policy.HeaderName} header is required for {context.Request.Method} requests.");
+                throw new Core.Exceptions.ApplicationException(ERRORCODE.BADREQUEST, $"The {_policy.HeaderName} header is required for {context.Request.Method} requests.");
             }
 
             await _next(context);
@@ -68,7 +68,7 @@ public class IdempotencyMiddleware
 
         if (lookup.IsInProgress || !_store.TryBegin(cacheKey))
         {
-            throw new ApiException(ERRORCODE.CONFLICT, "A request with the same idempotency key is already in progress.");
+            throw new Core.Exceptions.ApplicationException(ERRORCODE.CONFLICT, "A request with the same idempotency key is already in progress.");
         }
 
         var originalBody = context.Response.Body;

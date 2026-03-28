@@ -1,8 +1,8 @@
 using AbsoluteAlgorithm.Infrastructure.Database;
-using AbsoluteAlgorithm.Infrastructure.Enums;
 using AbsoluteAlgorithm.Infrastructure.Middlewares;
-using AbsoluteAlgorithm.Infrastructure.Models.Auth;
-using AbsoluteAlgorithm.Infrastructure.Models.Configuration;
+using AbsoluteAlgorithm.Core.Enums;
+using AbsoluteAlgorithm.Core.Models.Auth;
+using AbsoluteAlgorithm.Core.Models.Configuration;
 using AbsoluteAlgorithm.Infrastructure.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -12,6 +12,9 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NSwag.AspNetCore;
+using AbsoluteAlgorithm.Core.Models.Idempotency;
+using AbsoluteAlgorithm.Core.Models.Webhooks;
+using AbsoluteAlgorithm.Core.Models.Documentation;
 
 namespace AbsoluteAlgorithm.Infrastructure.Extensions;
 
@@ -207,7 +210,7 @@ END;";
         return app.UseMiddleware<CsrfMiddleware>();
     }
 
-    private static IApplicationBuilder UseAbsoluteIdempotency(this IApplicationBuilder app, Models.Idempotency.IdempotencyPolicy? policy)
+    private static IApplicationBuilder UseAbsoluteIdempotency(this IApplicationBuilder app, IdempotencyPolicy? policy)
     {
         if (policy is null)
         {
@@ -217,7 +220,7 @@ END;";
         return app.UseMiddleware<IdempotencyMiddleware>();
     }
 
-    private static IApplicationBuilder UseAbsoluteWebhookSignatureValidation(this IApplicationBuilder app, IReadOnlyList<Models.Webhooks.WebhookSignaturePolicy>? policies)
+    private static IApplicationBuilder UseAbsoluteWebhookSignatureValidation(this IApplicationBuilder app, IReadOnlyList<WebhookSignaturePolicy>? policies)
     {
         if (policies is null || !policies.Any())
         {
@@ -227,7 +230,7 @@ END;";
         return app.UseMiddleware<WebhookSignatureMiddleware>();
     }
 
-    private static IApplicationBuilder UseAbsoluteSwagger(this IApplicationBuilder app, Models.Documentation.SwaggerPolicy? policy)
+    private static IApplicationBuilder UseAbsoluteSwagger(this IApplicationBuilder app, SwaggerPolicy? policy)
     {
         if (policy is null)
         {

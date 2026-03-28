@@ -1,8 +1,8 @@
 using System.Text;
-using AbsoluteAlgorithm.Infrastructure.Constraints;
-using AbsoluteAlgorithm.Infrastructure.Exceptions;
-using AbsoluteAlgorithm.Infrastructure.Models.Webhooks;
-using AbsoluteAlgorithm.Infrastructure.Utilities;
+using AbsoluteAlgorithm.Core.Constraints;
+using AbsoluteAlgorithm.Core.Exceptions;
+using AbsoluteAlgorithm.Core.Models.Webhooks;
+using AbsoluteAlgorithm.Core.Networking;
 using Microsoft.AspNetCore.Http;
 
 namespace AbsoluteAlgorithm.Infrastructure.Middlewares;
@@ -47,7 +47,7 @@ public class WebhookSignatureMiddleware
         var timestamp = context.Request.Headers[policy.TimestampHeaderName].ToString();
         if (string.IsNullOrWhiteSpace(signature) || string.IsNullOrWhiteSpace(timestamp))
         {
-            throw new ApiException(ERRORCODE.UNAUTHORIZED, "The request signature headers are missing.");
+            throw new Core.Exceptions.ApplicationException(ERRORCODE.UNAUTHORIZED, "The request signature headers are missing.");
         }
 
         var secret = Environment.GetEnvironmentVariable(policy.SecretName);
@@ -65,9 +65,9 @@ public class WebhookSignatureMiddleware
 
         context.Request.Body.Position = 0;
 
-        if (!RequestSignatureUtility.VerifySignature(payload, timestamp, signature, secret, policy.Algorithm, policy.AllowedClockSkewSeconds))
+        if (!RequestSignature.VerifySignature(payload, timestamp, signature, secret, policy.Algorithm, policy.AllowedClockSkewSeconds))
         {
-            throw new ApiException(ERRORCODE.UNAUTHORIZED, "The request signature is invalid.");
+            throw new Core.Exceptions.ApplicationException(ERRORCODE.UNAUTHORIZED, "The request signature is invalid.");
         }
 
         await _next(context);

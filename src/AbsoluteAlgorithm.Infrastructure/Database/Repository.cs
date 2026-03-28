@@ -2,15 +2,15 @@ using System.Data;
 using System.ComponentModel;
 using System.Text;
 using AbsoluteAlgorithm.Infrastructure.ResilienceFactories;
-using AbsoluteAlgorithm.Infrastructure.Constraints;
-using AbsoluteAlgorithm.Infrastructure.Exceptions;
-using AbsoluteAlgorithm.Infrastructure.Enums;
-using AbsoluteAlgorithm.Infrastructure.Models.Database;
-using AbsoluteAlgorithm.Infrastructure.Models.Pagination;
-using AbsoluteAlgorithm.Infrastructure.Utilities;
+using AbsoluteAlgorithm.Core.Constraints;
+using AbsoluteAlgorithm.Core.Exceptions;
+using AbsoluteAlgorithm.Core.Enums;
+using AbsoluteAlgorithm.Core.Models.Database;
+using AbsoluteAlgorithm.Core.Models.Pagination;
 using Dapper;
 using Microsoft.AspNetCore.Http;
 using Polly;
+using AbsoluteAlgorithm.Core.Concurrency;
 
 namespace AbsoluteAlgorithm.Infrastructure.Database;
 
@@ -422,7 +422,7 @@ public class Repository
             currentVersionToken = await ExecuteScalarAsync<string>(definition.CurrentVersionSql, parameters, commandTimeout, cancellationToken);
             if (string.IsNullOrWhiteSpace(currentVersionToken))
             {
-                throw ApiExceptions.Notfound(resourceName);
+                throw ApplicationExceptions.Notfound(resourceName);
             }
 
             if (definition.RequireIfMatchHeader)
@@ -453,10 +453,10 @@ public class Repository
         var resourceExists = await ResourceExistsAsync(definition, parameters, commandTimeout, cancellationToken);
         if (!resourceExists)
         {
-            throw ApiExceptions.Notfound(resourceName);
+            throw ApplicationExceptions.Notfound(resourceName);
         }
 
-        throw ApiExceptions.Conflict($"The {resourceName} was modified by another request.");
+        throw ApplicationExceptions.Conflict($"The {resourceName} was modified by another request.");
     }
 
     private Task<TResult> ExecuteWithResilienceAsync<TResult>(Func<CancellationToken, Task<TResult>> action, CancellationToken cancellationToken)
@@ -546,7 +546,7 @@ public class Repository
             FilterOperator.LessThanOrEqual => AddUnaryFilter(parameters, parameterName, column, "<=", filter.Value),
             FilterOperator.In => AddInFilter(parameters, parameterName, column, filter),
             FilterOperator.Between => AddBetweenFilter(parameters, parameterName, column, filter),
-            _ => throw ApiExceptions.Badrequest($"Unsupported filter operator '{filter.Operator}'.")
+            _ => throw ApplicationExceptions.Badrequest($"Unsupported filter operator '{filter.Operator}'.")
         };
     }
 
@@ -554,7 +554,7 @@ public class Repository
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            throw ApiExceptions.Badrequest($"A value is required for the '{comparison}' filter.");
+            throw ApplicationExceptions.Badrequest($"A value is required for the '{comparison}' filter.");
         }
 
         parameters.Add(parameterName, value.Trim());
@@ -565,7 +565,7 @@ public class Repository
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            throw ApiExceptions.Badrequest("A text value is required for the supplied filter.");
+            throw ApplicationExceptions.Badrequest("A text value is required for the supplied filter.");
         }
 
         parameters.Add(parameterName, $"{prefix}{value.Trim().ToLowerInvariant()}{suffix}");
@@ -579,7 +579,7 @@ public class Repository
 
         if (values.Length == 0)
         {
-            throw ApiExceptions.Badrequest("At least one value is required for the 'In' filter.");
+            throw ApplicationExceptions.Badrequest("At least one value is required for the 'In' filter.");
         }
 
         parameters.Add(parameterName, values);
@@ -593,7 +593,7 @@ public class Repository
 
         if (values.Length < 2)
         {
-            throw ApiExceptions.Badrequest("Two values are required for the 'Between' filter.");
+            throw ApplicationExceptions.Badrequest("Two values are required for the 'Between' filter.");
         }
 
         parameters.Add($"{parameterName}Start", values[0]);
@@ -681,6 +681,6 @@ public class Repository
             }
         }
 
-        throw ApiExceptions.Badrequest($"The field '{field}' is not allowed for {usage} operations.");
+        throw ApplicationExceptions.Badrequest($"The field '{field}' is not allowed for {usage} operations.");
     }
 }

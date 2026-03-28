@@ -1,4 +1,4 @@
-using AbsoluteAlgorithm.Infrastructure.Models.Request;
+using AbsoluteAlgorithm.Core.Models.Request;
 
 namespace AbsoluteAlgorithm.Infrastructure.Services;
 

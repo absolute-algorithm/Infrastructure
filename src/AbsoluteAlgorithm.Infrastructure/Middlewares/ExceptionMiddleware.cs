@@ -1,9 +1,9 @@
 using System.Data.Common;
 using System.Net;
 using System.Text.Json;
-using AbsoluteAlgorithm.Infrastructure.Constraints;
-using AbsoluteAlgorithm.Infrastructure.Exceptions;
-using AbsoluteAlgorithm.Infrastructure.Models.Response;
+using AbsoluteAlgorithm.Core.Constraints;
+using AbsoluteAlgorithm.Core.Exceptions;
+using AbsoluteAlgorithm.Core.Models.Response;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
@@ -43,7 +43,7 @@ public class ExceptionMiddleware
         {
             await HandleOperationCancelledExceptionAsync(context, oex).ConfigureAwait(false);
         }
-        catch (ApiException apiex)
+        catch (Core.Exceptions.ApplicationException apiex)
         {
             await HandleApiExceptionAsync(context, apiex).ConfigureAwait(false);
         }
@@ -68,7 +68,7 @@ public class ExceptionMiddleware
         return WriteResponse(error, context);
     }
 
-    private Task HandleApiExceptionAsync(HttpContext context, ApiException exception)
+    private Task HandleApiExceptionAsync(HttpContext context, Core.Exceptions.ApplicationException exception)
     {
         _logger.LogError(exception, "{message}", exception.Message);
 

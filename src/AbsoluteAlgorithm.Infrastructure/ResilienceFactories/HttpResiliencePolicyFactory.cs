@@ -2,8 +2,8 @@ using Polly;
 using Polly.CircuitBreaker;
 using Polly.Retry;
 using Polly.Timeout;
-using AbsoluteAlgorithm.Infrastructure.Enums;
-using AbsoluteAlgorithm.Infrastructure.Models.Resilience;
+using AbsoluteAlgorithm.Core.Enums;
+using AbsoluteAlgorithm.Core.Models.Resilience;
 
 namespace AbsoluteAlgorithm.Infrastructure.ResilienceFactories;
 

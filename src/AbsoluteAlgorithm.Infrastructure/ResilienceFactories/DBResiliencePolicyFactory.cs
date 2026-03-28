@@ -1,7 +1,7 @@
 using System;
 using System.Data.Common;
-using AbsoluteAlgorithm.Infrastructure.Enums;
-using AbsoluteAlgorithm.Infrastructure.Models.Resilience;
+using AbsoluteAlgorithm.Core.Enums;
+using AbsoluteAlgorithm.Core.Models.Resilience;
 using Microsoft.Data.SqlClient;
 using Npgsql;
 using Polly;

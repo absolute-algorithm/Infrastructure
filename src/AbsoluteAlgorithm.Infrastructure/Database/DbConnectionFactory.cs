@@ -1,6 +1,6 @@
 using System.Data;
-using AbsoluteAlgorithm.Infrastructure.Enums;
-using AbsoluteAlgorithm.Infrastructure.Models.Database;
+using AbsoluteAlgorithm.Core.Enums;
+using AbsoluteAlgorithm.Core.Models.Database;
 using Microsoft.Data.SqlClient;
 using Npgsql;
 

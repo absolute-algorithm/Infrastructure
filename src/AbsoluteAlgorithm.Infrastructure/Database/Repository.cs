@@ -9,7 +9,6 @@ using AbsoluteAlgorithm.Core.Models.Database;
 using AbsoluteAlgorithm.Core.Models.Pagination;
 using Dapper;
 using Microsoft.AspNetCore.Http;
-using Polly;
 using AbsoluteAlgorithm.Core.Concurrency;
 
 namespace AbsoluteAlgorithm.Infrastructure.Database;
@@ -25,7 +24,6 @@ public class Repository
     private readonly DatabasePolicy _policy;
     private readonly string _connectionString;
     private readonly IHttpContextAccessor _httpContextAccessor;
-    private readonly IAsyncPolicy _resiliencePolicy;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Repository"/> class.
@@ -37,7 +35,6 @@ public class Repository
         _policy = policy;
         _connectionString = Environment.GetEnvironmentVariable(policy.ConnectionStringName!) ?? throw new InvalidOperationException($"Database secret '{policy.ConnectionStringName}' is missing.");
         _httpContextAccessor = httpContextAccessor;
-        _resiliencePolicy = DBResiliencePolicyFactory.CreateDbPolicy(policy.DatabaseProvider, policy.ResiliencePolicy);
     }
 
     private IDbConnection GetConnection()
@@ -459,9 +456,32 @@ public class Repository
         throw ApplicationExceptions.Conflict($"The {resourceName} was modified by another request.");
     }
 
+    /// <summary>
+    /// Executes a generic database action with resilience.
+    /// Used by QueryAsync and QueryInterpolatedAsync.
+    /// </summary>
     private Task<TResult> ExecuteWithResilienceAsync<TResult>(Func<CancellationToken, Task<TResult>> action, CancellationToken cancellationToken)
     {
-        return _resiliencePolicy.ExecuteAsync(token => action(token), cancellationToken);
+        // 1. Create the Generic Policy for the specific result type
+        var policy = DBResiliencePolicyFactory.CreateDbPolicy<TResult>(
+            _policy.DatabaseProvider, 
+            _policy.ResiliencePolicy);
+
+        return policy.ExecuteAsync(token => action(token), cancellationToken);
+    }
+
+    /// <summary>
+    /// Executes a database command (like ExecuteAsync or ExecuteStoredProcedureAsync) with resilience.
+    /// </summary>
+    private Task<int> ExecuteCommandWithResilienceAsync(Func<CancellationToken, Task<int>> action, CancellationToken cancellationToken)
+    {
+        // 2. Create the Non-Generic Policy specifically for 'int' results or void commands
+        var policy = DBResiliencePolicyFactory.CreateDbCommandPolicy(
+            _policy.DatabaseProvider, 
+            _policy.ResiliencePolicy);
+
+        // Note: IAsyncPolicy (non-generic) can execute a Task<int> via this overload
+        return policy.ExecuteAsync(token => action(token), cancellationToken);
     }
 
     private async Task<bool> ResourceExistsAsync(RepositoryOptimisticUpdateDefinition definition, object? parameters, int? commandTimeout, CancellationToken cancellationToken)

@@ -11,7 +11,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using NSwag.AspNetCore;
 using AbsoluteAlgorithm.Core.Models.Idempotency;
 using AbsoluteAlgorithm.Core.Models.Webhooks;
 using AbsoluteAlgorithm.Core.Models.Documentation;
@@ -173,6 +172,11 @@ END;";
 
         app.UseCorrelationId();
         app.UseExceptionMiddleware();
+        if (appConfig.LoggingConfiguration is not null && appConfig.LoggingConfiguration.EnableRequestAndResponseLogging)
+        {
+            app.UseRequestResponseLogging();
+        }
+
         if (appConfig.EnableWebhookSignatureValidation)
         {
             app.UseAbsoluteWebhookSignatureValidation(appConfig.WebhookSignaturePolicies);
@@ -394,4 +398,11 @@ END;";
     /// <param name="app">The application builder.</param>
     /// <returns>The <paramref name="app"/> instance.</returns>
     private static IApplicationBuilder UseAbsoluteDatabase(this IApplicationBuilder app) => app.UseMiddleware<DatabaseTransactionMiddleware>();
+
+    /// <summary>
+    /// Adds the request and response logging middleware.
+    /// </summary>
+    /// <param name="app">The application builder.</param>
+    /// <returns>The <paramref name="app"/> instance.</returns>
+    private static IApplicationBuilder UseRequestResponseLogging(this IApplicationBuilder app) => app.UseMiddleware<RequestResponseLoggingMiddleware>();
 }

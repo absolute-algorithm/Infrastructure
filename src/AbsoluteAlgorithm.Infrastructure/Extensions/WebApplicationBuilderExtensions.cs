@@ -63,10 +63,17 @@ public static class WebApplicationBuilderExtensions
         builder.Configuration.AddEnvironmentVariables();
         builder.Configuration.SetBasePath(AppContext.BaseDirectory);
 
-        builder.Configuration.AddJsonFile("nlog.settings.json", optional: false, reloadOnChange: true);
-        builder.Logging.ClearProviders();
-        builder.Logging.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Information);
-        builder.Host.UseNLog();
+        if (appConfig.LoggingConfiguration is not null && appConfig.LoggingConfiguration.EnableLogging)
+        {
+            builder.Logging.ClearProviders();
+            builder.Configuration.AddJsonFile("nlog.settings.json", optional: false, reloadOnChange: true);
+            builder.Logging.SetMinimumLevel(LogLevel.Information);
+            builder.Host.UseNLog();
+        }
+        else
+        {
+            builder.Logging.ClearProviders();
+        }
 
         builder.Services.AddHsts(options =>
         {

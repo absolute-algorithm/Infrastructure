@@ -7,13 +7,12 @@ using AbsoluteAlgorithm.Infrastructure.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using AbsoluteAlgorithm.Core.Models.Idempotency;
 using AbsoluteAlgorithm.Core.Models.Webhooks;
 using AbsoluteAlgorithm.Core.Models.Documentation;
+using AbsoluteAlgorithm.Core.Diagnostics;
 
 namespace AbsoluteAlgorithm.Infrastructure.Extensions;
 
@@ -264,29 +263,26 @@ END;";
     {
         if (configuration.DatabasePolicies is null) return;
 
-        var loggerFactory = app.ApplicationServices.GetRequiredService<ILoggerFactory>();
-        var logger = loggerFactory.CreateLogger("DatabaseInitializer");
-
         foreach (var policy in configuration.DatabasePolicies.Where(x => x.InitializeDatabase))
         {
             string connectionString = Environment.GetEnvironmentVariable(policy.ConnectionStringName)!;
 
-            DatabaseInitializer.Initialize(logger, connectionString, policy.DatabaseProvider, policy.InitializationScript!);
+            DatabaseInitializer.Initialize(connectionString, policy.DatabaseProvider, policy.InitializationScript!);
 
             if (policy.InitializeAuditTable)
             {
                 switch (policy.DatabaseProvider)
                 {
                     case DatabaseProvider.PostgreSQL:
-                        DatabaseInitializer.Initialize(logger, connectionString, policy.DatabaseProvider, postgresAuditSetup);
-                        DatabaseInitializer.Initialize(logger, connectionString, policy.DatabaseProvider, postgresDiscoveryLoop);
+                        DatabaseInitializer.Initialize(connectionString, policy.DatabaseProvider, postgresAuditSetup);
+                        DatabaseInitializer.Initialize(connectionString, policy.DatabaseProvider, postgresDiscoveryLoop);
                         break;
 
                     case DatabaseProvider.MSSQL:
-                        DatabaseInitializer.Initialize(logger, connectionString, policy.DatabaseProvider, mssqlAuditTable);
-                        DatabaseInitializer.Initialize(logger, connectionString, policy.DatabaseProvider, mssqlDropProcedure);
-                        DatabaseInitializer.Initialize(logger, connectionString, policy.DatabaseProvider, mssqlCreateProcedure);
-                        DatabaseInitializer.Initialize(logger, connectionString, policy.DatabaseProvider, mssqlDiscoveryLoop);
+                        DatabaseInitializer.Initialize(connectionString, policy.DatabaseProvider, mssqlAuditTable);
+                        DatabaseInitializer.Initialize(connectionString, policy.DatabaseProvider, mssqlDropProcedure);
+                        DatabaseInitializer.Initialize(connectionString, policy.DatabaseProvider, mssqlCreateProcedure);
+                        DatabaseInitializer.Initialize(connectionString, policy.DatabaseProvider, mssqlDiscoveryLoop);
                         break;
                 }
             }
@@ -297,19 +293,16 @@ END;";
     {
         if (configuration.StoragePolicies is null || !configuration.StoragePolicies.Any()) return;
 
-        var loggerFactory = app.ApplicationServices.GetRequiredService<ILoggerFactory>();
-        var logger = loggerFactory.CreateLogger("StorageInitializer");
-
         foreach (var policy in configuration.StoragePolicies)
         {
             try
             {
                 StorageFactory.EnsureBucketExistsAsync(policy).GetAwaiter().GetResult();
-                logger.LogInformation("Bucket '{BucketName}' ensured for {Provider} ({PolicyName}).", policy.BucketName, policy.StorageProvider, policy.Name);
+                Logger.Info($"Bucket '{policy.BucketName}' ensured for {policy.StorageProvider} ({policy.Name}).");
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "Could not ensure bucket '{BucketName}' for {Provider} ({PolicyName}).", policy.BucketName, policy.StorageProvider, policy.Name);
+                Logger.Error($"Could not ensure bucket '{policy.BucketName}' for {policy.StorageProvider} ({policy.Name}).", ex);
             }
         }
     }

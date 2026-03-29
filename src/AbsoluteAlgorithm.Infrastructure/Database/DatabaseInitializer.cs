@@ -1,21 +1,20 @@
 ﻿using System.Data.Common;
 using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.Logging;
 using Npgsql;
 using Dapper;
-using ILogger = Microsoft.Extensions.Logging.ILogger;
 using AbsoluteAlgorithm.Core.Enums;
+using AbsoluteAlgorithm.Core.Diagnostics;
 
 namespace AbsoluteAlgorithm.Infrastructure.Database;
 
 internal static class DatabaseInitializer
 {
-    internal static void Initialize(ILogger logger, string connectionString, DatabaseProvider provider, string databaseScript)
+    internal static void Initialize(string connectionString, DatabaseProvider provider, string databaseScript)
     {
         try
         {
             // 1. Ensure the DB is physically created (Sync)
-            EnsureDatabaseExists(connectionString, provider, logger);
+            EnsureDatabaseExists(connectionString, provider);
 
             // 2. Open a connection to the target DB
             using var connection = CreateConnection(connectionString, provider);
@@ -27,23 +26,23 @@ internal static class DatabaseInitializer
             {
                 connection.Execute(databaseScript, transaction: tx);
                 tx.Commit();
-                logger.LogInformation("{Provider} database initialized successfully.", provider);
+                Logger.Info($"{provider} database initialized successfully.");
             }
             catch (Exception ex)
             {
                 tx.Rollback();
-                logger.LogError(ex, "Transaction failed during database initialization script.");
+                Logger.Error("Transaction failed during database initialization script.", ex);
                 throw;
             }
         }
         catch (Exception ex)
         {
-            logger.LogCritical(ex, "Absolute System Failure: Database could not be initialized for {Provider}.", provider);
+            Logger.Error($"Absolute System Failure: Database could not be initialized for {provider}.", ex);
             throw;
         }
     }
 
-    private static void EnsureDatabaseExists(string connectionString, DatabaseProvider provider, ILogger logger)
+    private static void EnsureDatabaseExists(string connectionString, DatabaseProvider provider)
     {
         string masterConnString;
         string dbName;
@@ -82,7 +81,7 @@ internal static class DatabaseInitializer
         if (exists != 1)
         {
             adminConn.Execute(createSql);
-            logger.LogInformation("Created {Provider} database: {Db}", provider, dbName);
+            Logger.Info($"Created {provider} database: {dbName}");
         }
     }
 

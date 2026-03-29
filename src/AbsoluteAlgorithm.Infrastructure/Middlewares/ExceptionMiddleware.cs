@@ -2,6 +2,7 @@ using System.Data.Common;
 using System.Net;
 using System.Text.Json;
 using AbsoluteAlgorithm.Core.Constraints;
+using AbsoluteAlgorithm.Core.Diagnostics;
 using AbsoluteAlgorithm.Core.Exceptions;
 using AbsoluteAlgorithm.Core.Models.Response;
 using Microsoft.AspNetCore.Http;
@@ -15,17 +16,14 @@ namespace AbsoluteAlgorithm.Infrastructure.Middlewares;
 public class ExceptionMiddleware
 {
     private readonly RequestDelegate _next;
-    private readonly ILogger<ExceptionMiddleware> _logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ExceptionMiddleware"/> class.
     /// </summary>
     /// <param name="next">The next middleware in the pipeline.</param>
-    /// <param name="logger">The logger used for exception reporting.</param>
-    public ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddleware> logger)
+    public ExceptionMiddleware(RequestDelegate next)
     {
         _next = next;
-        _logger = logger;
     }
 
     /// <summary>
@@ -70,7 +68,7 @@ public class ExceptionMiddleware
 
     private Task HandleApiExceptionAsync(HttpContext context, Core.Exceptions.ApplicationException exception)
     {
-        _logger.LogError(exception, "{message}", exception.Message);
+        Logger.Error($"Application Exception: {exception.Message}", exception);
 
         var error = new ErrorResponse
         {
@@ -83,7 +81,7 @@ public class ExceptionMiddleware
 
     private Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
-        _logger.LogError(exception, "{message}", exception.Message);
+        Logger.Error($"Unhandled Exception: {exception.Message}", exception);
 
         var error = new ErrorResponse
         {
@@ -96,7 +94,7 @@ public class ExceptionMiddleware
 
     private Task HandleDbExceptionAsync(HttpContext context, DbException exception)
     {
-        _logger.LogError(exception, "Database Error: {message}", exception.Message);
+        Logger.Error($"Database Error: {exception.Message}", exception);
 
         var error = new ErrorResponse
         {

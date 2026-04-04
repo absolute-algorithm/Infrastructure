@@ -155,7 +155,7 @@ END;";
             app.UseHttpsRedirection();
         }
 
-        if (appConfig.EnableRelationalDatabase)
+        if (appConfig.DatabasePolicies is not null)
         {
             InitializeDatabase(app, appConfig);
         }
@@ -164,7 +164,7 @@ END;";
 
         app.UseRouting();
 
-        if (appConfig.EnableRateLimit)
+        if (appConfig.RateLimitPolicies is not null)
         {
             app.UseRateLimiter();
         }
@@ -176,7 +176,7 @@ END;";
             app.UseRequestResponseLogging();
         }
 
-        if (appConfig.EnableWebhookSignatureValidation)
+        if (appConfig.WebhookSignaturePolicies is not null)
         {
             app.UseAbsoluteWebhookSignatureValidation(appConfig.WebhookSignaturePolicies);
         }
@@ -190,7 +190,7 @@ END;";
         app.UseAuthorization();
         app.UseAbsoluteIdempotency(appConfig.IdempotencyPolicy);
 
-        if (appConfig.EnableRelationalDatabase)
+        if (appConfig.DatabasePolicies is not null)
         {
             app.UseAbsoluteDatabase();
         }

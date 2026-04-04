@@ -273,12 +273,12 @@ END;";
             {
                 switch (policy.DatabaseProvider)
                 {
-                    case DatabaseProvider.PostgreSQL:
+                    case RelationalDatabaseProvider.PostgreSQL:
                         DatabaseInitializer.Initialize(connectionString, policy.DatabaseProvider, postgresAuditSetup);
                         DatabaseInitializer.Initialize(connectionString, policy.DatabaseProvider, postgresDiscoveryLoop);
                         break;
 
-                    case DatabaseProvider.MSSQL:
+                    case RelationalDatabaseProvider.MSSQL:
                         DatabaseInitializer.Initialize(connectionString, policy.DatabaseProvider, mssqlAuditTable);
                         DatabaseInitializer.Initialize(connectionString, policy.DatabaseProvider, mssqlDropProcedure);
                         DatabaseInitializer.Initialize(connectionString, policy.DatabaseProvider, mssqlCreateProcedure);

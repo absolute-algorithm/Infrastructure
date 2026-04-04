@@ -500,12 +500,12 @@ public static class WebApplicationBuilderExtensions
 
                 _ = policy.DatabaseProvider switch
                 {
-                    DatabaseProvider.PostgreSQL => healthBuilder.AddNpgSql(
+                    RelationalDatabaseProvider.PostgreSQL => healthBuilder.AddNpgSql(
                         connectionString,
                         name: $"Postgres: {policy.Name}",
                         tags: ["db", "postgres", "ready"]),
 
-                    DatabaseProvider.MSSQL => healthBuilder.AddSqlServer(
+                    RelationalDatabaseProvider.MSSQL => healthBuilder.AddSqlServer(
                         connectionString,
                         name: $"MSSQL: {policy.Name}",
                         tags: ["db", "mssql", "ready"]),

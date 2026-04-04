@@ -1,5 +1,5 @@
 using System.Data;
-using AbsoluteAlgorithm.Infrastructure.Constraints;
+using AbsoluteAlgorithm.Core.Constraints;
 using Microsoft.AspNetCore.Http;
 
 namespace AbsoluteAlgorithm.Infrastructure.Middlewares;

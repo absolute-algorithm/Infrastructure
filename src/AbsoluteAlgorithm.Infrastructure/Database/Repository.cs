@@ -2,15 +2,14 @@ using System.Data;
 using System.ComponentModel;
 using System.Text;
 using AbsoluteAlgorithm.Infrastructure.ResilienceFactories;
-using AbsoluteAlgorithm.Infrastructure.Constraints;
-using AbsoluteAlgorithm.Infrastructure.Exceptions;
-using AbsoluteAlgorithm.Infrastructure.Enums;
-using AbsoluteAlgorithm.Infrastructure.Models.Database;
-using AbsoluteAlgorithm.Infrastructure.Models.Pagination;
-using AbsoluteAlgorithm.Infrastructure.Utilities;
+using AbsoluteAlgorithm.Core.Constraints;
+using AbsoluteAlgorithm.Core.Exceptions;
+using AbsoluteAlgorithm.Core.Enums;
+using AbsoluteAlgorithm.Core.Models.Database;
+using AbsoluteAlgorithm.Core.Models.Pagination;
 using Dapper;
 using Microsoft.AspNetCore.Http;
-using Polly;
+using AbsoluteAlgorithm.Core.Concurrency;
 
 namespace AbsoluteAlgorithm.Infrastructure.Database;
 
@@ -25,7 +24,6 @@ public class Repository
     private readonly DatabasePolicy _policy;
     private readonly string _connectionString;
     private readonly IHttpContextAccessor _httpContextAccessor;
-    private readonly IAsyncPolicy _resiliencePolicy;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Repository"/> class.
@@ -37,7 +35,6 @@ public class Repository
         _policy = policy;
         _connectionString = Environment.GetEnvironmentVariable(policy.ConnectionStringName!) ?? throw new InvalidOperationException($"Database secret '{policy.ConnectionStringName}' is missing.");
         _httpContextAccessor = httpContextAccessor;
-        _resiliencePolicy = DBResiliencePolicyFactory.CreateDbPolicy(policy.DatabaseProvider, policy.ResiliencePolicy);
     }
 
     private IDbConnection GetConnection()
@@ -88,10 +85,10 @@ public class Repository
 
         string sessionSql = _policy.DatabaseProvider switch
         {
-            DatabaseProvider.PostgreSQL =>
+            RelationalDatabaseProvider.PostgreSQL =>
                 "SELECT set_config('app.user_id', @userId, true), set_config('app.correlation_id', @correlationId, true);",
 
-            DatabaseProvider.MSSQL =>
+            RelationalDatabaseProvider.MSSQL =>
                 "EXEC sp_set_session_context @key=N'user_id', @value=@userId; EXEC sp_set_session_context @key=N'correlation_id', @value=@correlationId;",
 
             _ => string.Empty
@@ -422,7 +419,7 @@ public class Repository
             currentVersionToken = await ExecuteScalarAsync<string>(definition.CurrentVersionSql, parameters, commandTimeout, cancellationToken);
             if (string.IsNullOrWhiteSpace(currentVersionToken))
             {
-                throw ApiExceptions.Notfound(resourceName);
+                throw ApplicationExceptions.Notfound(resourceName);
             }
 
             if (definition.RequireIfMatchHeader)
@@ -453,15 +450,38 @@ public class Repository
         var resourceExists = await ResourceExistsAsync(definition, parameters, commandTimeout, cancellationToken);
         if (!resourceExists)
         {
-            throw ApiExceptions.Notfound(resourceName);
+            throw ApplicationExceptions.Notfound(resourceName);
         }
 
-        throw ApiExceptions.Conflict($"The {resourceName} was modified by another request.");
+        throw ApplicationExceptions.Conflict($"The {resourceName} was modified by another request.");
     }
 
+    /// <summary>
+    /// Executes a generic database action with resilience.
+    /// Used by QueryAsync and QueryInterpolatedAsync.
+    /// </summary>
     private Task<TResult> ExecuteWithResilienceAsync<TResult>(Func<CancellationToken, Task<TResult>> action, CancellationToken cancellationToken)
     {
-        return _resiliencePolicy.ExecuteAsync(token => action(token), cancellationToken);
+        // 1. Create the Generic Policy for the specific result type
+        var policy = DBResiliencePolicyFactory.CreateDbPolicy<TResult>(
+            _policy.DatabaseProvider, 
+            _policy.ResiliencePolicy);
+
+        return policy.ExecuteAsync(token => action(token), cancellationToken);
+    }
+
+    /// <summary>
+    /// Executes a database command (like ExecuteAsync or ExecuteStoredProcedureAsync) with resilience.
+    /// </summary>
+    private Task<int> ExecuteCommandWithResilienceAsync(Func<CancellationToken, Task<int>> action, CancellationToken cancellationToken)
+    {
+        // 2. Create the Non-Generic Policy specifically for 'int' results or void commands
+        var policy = DBResiliencePolicyFactory.CreateDbCommandPolicy(
+            _policy.DatabaseProvider, 
+            _policy.ResiliencePolicy);
+
+        // Note: IAsyncPolicy (non-generic) can execute a Task<int> via this overload
+        return policy.ExecuteAsync(token => action(token), cancellationToken);
     }
 
     private async Task<bool> ResourceExistsAsync(RepositoryOptimisticUpdateDefinition definition, object? parameters, int? commandTimeout, CancellationToken cancellationToken)
@@ -546,7 +566,7 @@ public class Repository
             FilterOperator.LessThanOrEqual => AddUnaryFilter(parameters, parameterName, column, "<=", filter.Value),
             FilterOperator.In => AddInFilter(parameters, parameterName, column, filter),
             FilterOperator.Between => AddBetweenFilter(parameters, parameterName, column, filter),
-            _ => throw ApiExceptions.Badrequest($"Unsupported filter operator '{filter.Operator}'.")
+            _ => throw ApplicationExceptions.Badrequest($"Unsupported filter operator '{filter.Operator}'.")
         };
     }
 
@@ -554,7 +574,7 @@ public class Repository
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            throw ApiExceptions.Badrequest($"A value is required for the '{comparison}' filter.");
+            throw ApplicationExceptions.Badrequest($"A value is required for the '{comparison}' filter.");
         }
 
         parameters.Add(parameterName, value.Trim());
@@ -565,7 +585,7 @@ public class Repository
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            throw ApiExceptions.Badrequest("A text value is required for the supplied filter.");
+            throw ApplicationExceptions.Badrequest("A text value is required for the supplied filter.");
         }
 
         parameters.Add(parameterName, $"{prefix}{value.Trim().ToLowerInvariant()}{suffix}");
@@ -579,7 +599,7 @@ public class Repository
 
         if (values.Length == 0)
         {
-            throw ApiExceptions.Badrequest("At least one value is required for the 'In' filter.");
+            throw ApplicationExceptions.Badrequest("At least one value is required for the 'In' filter.");
         }
 
         parameters.Add(parameterName, values);
@@ -593,7 +613,7 @@ public class Repository
 
         if (values.Length < 2)
         {
-            throw ApiExceptions.Badrequest("Two values are required for the 'Between' filter.");
+            throw ApplicationExceptions.Badrequest("Two values are required for the 'Between' filter.");
         }
 
         parameters.Add($"{parameterName}Start", values[0]);
@@ -607,7 +627,7 @@ public class Repository
         {
             if (string.IsNullOrWhiteSpace(query.DefaultOrderBy))
             {
-                return _policy.DatabaseProvider == DatabaseProvider.MSSQL ? " ORDER BY (SELECT 1)" : string.Empty;
+                return _policy.DatabaseProvider == RelationalDatabaseProvider.MSSQL ? " ORDER BY (SELECT 1)" : string.Empty;
             }
 
             return NormalizeOrderByClause(query.DefaultOrderBy);
@@ -625,7 +645,7 @@ public class Repository
 
         if (segments.Length == 0)
         {
-            return _policy.DatabaseProvider == DatabaseProvider.MSSQL ? " ORDER BY (SELECT 1)" : string.Empty;
+            return _policy.DatabaseProvider == RelationalDatabaseProvider.MSSQL ? " ORDER BY (SELECT 1)" : string.Empty;
         }
 
         return " ORDER BY " + string.Join(", ", segments);
@@ -635,8 +655,8 @@ public class Repository
     {
         return _policy.DatabaseProvider switch
         {
-            DatabaseProvider.MSSQL when string.IsNullOrWhiteSpace(orderByClause) => " ORDER BY (SELECT 1) OFFSET @__pageOffset ROWS FETCH NEXT @__pageSize ROWS ONLY",
-            DatabaseProvider.MSSQL => " OFFSET @__pageOffset ROWS FETCH NEXT @__pageSize ROWS ONLY",
+            RelationalDatabaseProvider.MSSQL when string.IsNullOrWhiteSpace(orderByClause) => " ORDER BY (SELECT 1) OFFSET @__pageOffset ROWS FETCH NEXT @__pageSize ROWS ONLY",
+            RelationalDatabaseProvider.MSSQL => " OFFSET @__pageOffset ROWS FETCH NEXT @__pageSize ROWS ONLY",
             _ => " LIMIT @__pageSize OFFSET @__pageOffset"
         };
     }
@@ -681,6 +701,6 @@ public class Repository
             }
         }
 
-        throw ApiExceptions.Badrequest($"The field '{field}' is not allowed for {usage} operations.");
+        throw ApplicationExceptions.Badrequest($"The field '{field}' is not allowed for {usage} operations.");
     }
 }

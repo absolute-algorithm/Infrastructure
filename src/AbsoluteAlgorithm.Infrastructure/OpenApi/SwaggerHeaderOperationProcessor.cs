@@ -1,4 +1,4 @@
-using AbsoluteAlgorithm.Infrastructure.Models.Documentation;
+using AbsoluteAlgorithm.Core.Models.Documentation;
 using NJsonSchema;
 using NSwag;
 using NSwag.Generation.Processors;

@@ -5,26 +5,25 @@ using System.Threading.RateLimiting;
 using Amazon.S3;
 using Asp.Versioning;
 using AbsoluteAlgorithm.Infrastructure.ResilienceFactories;
-using AbsoluteAlgorithm.Infrastructure.Constraints;
 using AbsoluteAlgorithm.Infrastructure.Database;
-using AbsoluteAlgorithm.Infrastructure.Enums;
 using AbsoluteAlgorithm.Infrastructure.Filters;
 using AbsoluteAlgorithm.Infrastructure.Health;
-using AbsoluteAlgorithm.Infrastructure.Models.Auth;
-using AbsoluteAlgorithm.Infrastructure.Models.Configuration;
-using AbsoluteAlgorithm.Infrastructure.Models.Database;
-using AbsoluteAlgorithm.Infrastructure.Models.Documentation;
-using AbsoluteAlgorithm.Infrastructure.Models.Http;
-using AbsoluteAlgorithm.Infrastructure.Models.Idempotency;
-using AbsoluteAlgorithm.Infrastructure.Models.RateLimit;
-using AbsoluteAlgorithm.Infrastructure.Models.Response;
-using AbsoluteAlgorithm.Infrastructure.Models.Storage;
-using AbsoluteAlgorithm.Infrastructure.Models.Webhooks;
+using AbsoluteAlgorithm.Core.Constraints;
+using AbsoluteAlgorithm.Core.Enums;
+using AbsoluteAlgorithm.Core.Models.Auth;
+using AbsoluteAlgorithm.Core.Models.Configuration;
+using AbsoluteAlgorithm.Core.Models.Database;
+using AbsoluteAlgorithm.Core.Models.Documentation;
+using AbsoluteAlgorithm.Core.Models.Http;
+using AbsoluteAlgorithm.Core.Models.Idempotency;
+using AbsoluteAlgorithm.Core.Models.RateLimit;
+using AbsoluteAlgorithm.Core.Models.Response;
+using AbsoluteAlgorithm.Core.Models.Storage;
+using AbsoluteAlgorithm.Core.Models.Webhooks;
+using AbsoluteAlgorithm.Core.Sanitizers;
+using AbsoluteAlgorithm.Core.Validation;
 using AbsoluteAlgorithm.Infrastructure.OpenApi;
-using AbsoluteAlgorithm.Infrastructure.Sanitizers;
 using AbsoluteAlgorithm.Infrastructure.Services;
-using AbsoluteAlgorithm.Infrastructure.Validation;
-using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -58,15 +57,22 @@ public static class WebApplicationBuilderExtensions
     /// <returns>The <paramref name="builder"/> instance.</returns>
     public static WebApplicationBuilder AddAbsoluteServices(this WebApplicationBuilder builder, ApplicationConfiguration appConfig)
     {
-        ApplicationConfigurationValidator.ValidateOrThrow(appConfig);
+        ApplicationConfigurationValidator.ValidateAndThrow(appConfig);
 
         builder.Configuration.AddEnvironmentVariables();
         builder.Configuration.SetBasePath(AppContext.BaseDirectory);
 
-        builder.Configuration.AddJsonFile("nlog.settings.json", optional: false, reloadOnChange: true);
-        builder.Logging.ClearProviders();
-        builder.Logging.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Information);
-        builder.Host.UseNLog();
+        if (appConfig.LoggingConfiguration is not null && appConfig.LoggingConfiguration.EnableLogging)
+        {
+            builder.Logging.ClearProviders();
+            builder.Configuration.AddJsonFile("nlog.settings.json", optional: false, reloadOnChange: true);
+            builder.Logging.SetMinimumLevel(LogLevel.Information);
+            builder.Host.UseNLog();
+        }
+        else
+        {
+            builder.Logging.ClearProviders();
+        }
 
         builder.Services.AddHsts(options =>
         {
@@ -108,49 +114,45 @@ public static class WebApplicationBuilderExtensions
 
         builder.Services.AddResponseCaching();
 
-        if (appConfig.EnableApiVersioning)
+        if (appConfig.ApiVersioningPolicy is not null)
         {
             builder.Services.AddAbsoluteApiVersioning(appConfig.ApiVersioningPolicy);
         }
 
-        if (appConfig.EnableSwagger)
+        if (appConfig.SwaggerPolicy is not null)
         {
             builder.Services.AddAbsoluteSwagger(appConfig);
         }
 
-        if (appConfig.EnableRelationalDatabase)
+        if (appConfig.DatabasePolicies is not null)
         {
             builder.Services.AddAbsoluteDatabase(appConfig.DatabasePolicies);
         }
 
-        if (appConfig.EnableStorage)
+        if (appConfig.StoragePolicies is not null)
         {
             builder.Services.AddAbsoluteStorage(appConfig.StoragePolicies);
         }
 
         builder.Services.AddAbsoluteHttpClients(appConfig.HttpClientPolicies);
 
-        if (appConfig.EnableRateLimit)
+        if (appConfig.RateLimitPolicies is not null)
         {
             builder.Services.AddAbsoluteRateLimits(appConfig.RateLimitPolicies);
         }
 
-        if (appConfig.ConfigureAuthentication)
+        if (appConfig.AuthManifest is not null)
         {
             builder.Services.AddAbsoluteAuthentication(appConfig.AuthManifest);
-        }
-
-        if (appConfig.ConfigureAuthorization)
-        {
             builder.Services.AddAbsoluteAuthorization(appConfig.AuthManifest?.Policies);
         }
 
-        if (appConfig.EnableIdempotency)
+        if (appConfig.IdempotencyPolicy is not null)
         {
             builder.Services.AddAbsoluteIdempotency(appConfig.IdempotencyPolicy);
         }
 
-        if (appConfig.EnableWebhookSignatureValidation && appConfig.WebhookSignaturePolicies is not null)
+        if (appConfig.WebhookSignaturePolicies is not null)
         {
             builder.Services.AddAbsoluteWebhookSignatureValidation(appConfig.WebhookSignaturePolicies);
         }
@@ -253,7 +255,7 @@ public static class WebApplicationBuilderExtensions
                     settings.ApiGroupNames = [document.ApiGroupName];
                 }
 
-                if (configuration.ConfigureAuthentication && (configuration.AuthManifest?.EnableJwt ?? true))
+                if (configuration.AuthManifest is not null && (configuration.AuthManifest?.EnableJwt ?? true))
                 {
                     settings.AddSecurity("Bearer", new OpenApiSecurityScheme
                     {
@@ -265,7 +267,7 @@ public static class WebApplicationBuilderExtensions
                     settings.OperationProcessors.Add(new AspNetCoreOperationSecurityScopeProcessor("Bearer"));
                 }
 
-                if (configuration.ConfigureAuthentication && configuration.AuthManifest?.EnableCookies == true)
+                if (configuration.AuthManifest is not null && configuration.AuthManifest?.EnableCookies == true)
                 {
                     settings.AddSecurity("Cookie", new OpenApiSecurityScheme
                     {
@@ -498,12 +500,12 @@ public static class WebApplicationBuilderExtensions
 
                 _ = policy.DatabaseProvider switch
                 {
-                    DatabaseProvider.PostgreSQL => healthBuilder.AddNpgSql(
+                    RelationalDatabaseProvider.PostgreSQL => healthBuilder.AddNpgSql(
                         connectionString,
                         name: $"Postgres: {policy.Name}",
                         tags: ["db", "postgres", "ready"]),
 
-                    DatabaseProvider.MSSQL => healthBuilder.AddSqlServer(
+                    RelationalDatabaseProvider.MSSQL => healthBuilder.AddSqlServer(
                         connectionString,
                         name: $"MSSQL: {policy.Name}",
                         tags: ["db", "mssql", "ready"]),

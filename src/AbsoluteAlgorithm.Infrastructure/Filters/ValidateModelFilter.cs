@@ -1,5 +1,5 @@
-using AbsoluteAlgorithm.Infrastructure.Constraints;
-using AbsoluteAlgorithm.Infrastructure.Models.Response;
+using AbsoluteAlgorithm.Core.Constraints;
+using AbsoluteAlgorithm.Core.Models.Response;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;

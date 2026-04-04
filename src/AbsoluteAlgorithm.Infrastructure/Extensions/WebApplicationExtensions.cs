@@ -1,17 +1,18 @@
 using AbsoluteAlgorithm.Infrastructure.Database;
-using AbsoluteAlgorithm.Infrastructure.Enums;
 using AbsoluteAlgorithm.Infrastructure.Middlewares;
-using AbsoluteAlgorithm.Infrastructure.Models.Auth;
-using AbsoluteAlgorithm.Infrastructure.Models.Configuration;
+using AbsoluteAlgorithm.Core.Enums;
+using AbsoluteAlgorithm.Core.Models.Auth;
+using AbsoluteAlgorithm.Core.Models.Configuration;
 using AbsoluteAlgorithm.Infrastructure.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using NSwag.AspNetCore;
+using AbsoluteAlgorithm.Core.Models.Idempotency;
+using AbsoluteAlgorithm.Core.Models.Webhooks;
+using AbsoluteAlgorithm.Core.Models.Documentation;
+using AbsoluteAlgorithm.Core.Diagnostics;
 
 namespace AbsoluteAlgorithm.Infrastructure.Extensions;
 
@@ -154,7 +155,7 @@ END;";
             app.UseHttpsRedirection();
         }
 
-        if (appConfig.EnableRelationalDatabase)
+        if (appConfig.DatabasePolicies is not null)
         {
             InitializeDatabase(app, appConfig);
         }
@@ -163,14 +164,19 @@ END;";
 
         app.UseRouting();
 
-        if (appConfig.EnableRateLimit)
+        if (appConfig.RateLimitPolicies is not null)
         {
             app.UseRateLimiter();
         }
 
         app.UseCorrelationId();
         app.UseExceptionMiddleware();
-        if (appConfig.EnableWebhookSignatureValidation)
+        if (appConfig.LoggingConfiguration is not null && appConfig.LoggingConfiguration.EnableRequestAndResponseLogging)
+        {
+            app.UseRequestResponseLogging();
+        }
+
+        if (appConfig.WebhookSignaturePolicies is not null)
         {
             app.UseAbsoluteWebhookSignatureValidation(appConfig.WebhookSignaturePolicies);
         }
@@ -184,7 +190,7 @@ END;";
         app.UseAuthorization();
         app.UseAbsoluteIdempotency(appConfig.IdempotencyPolicy);
 
-        if (appConfig.EnableRelationalDatabase)
+        if (appConfig.DatabasePolicies is not null)
         {
             app.UseAbsoluteDatabase();
         }
@@ -207,7 +213,7 @@ END;";
         return app.UseMiddleware<CsrfMiddleware>();
     }
 
-    private static IApplicationBuilder UseAbsoluteIdempotency(this IApplicationBuilder app, Models.Idempotency.IdempotencyPolicy? policy)
+    private static IApplicationBuilder UseAbsoluteIdempotency(this IApplicationBuilder app, IdempotencyPolicy? policy)
     {
         if (policy is null)
         {
@@ -217,7 +223,7 @@ END;";
         return app.UseMiddleware<IdempotencyMiddleware>();
     }
 
-    private static IApplicationBuilder UseAbsoluteWebhookSignatureValidation(this IApplicationBuilder app, IReadOnlyList<Models.Webhooks.WebhookSignaturePolicy>? policies)
+    private static IApplicationBuilder UseAbsoluteWebhookSignatureValidation(this IApplicationBuilder app, IReadOnlyList<WebhookSignaturePolicy>? policies)
     {
         if (policies is null || !policies.Any())
         {
@@ -227,7 +233,7 @@ END;";
         return app.UseMiddleware<WebhookSignatureMiddleware>();
     }
 
-    private static IApplicationBuilder UseAbsoluteSwagger(this IApplicationBuilder app, Models.Documentation.SwaggerPolicy? policy)
+    private static IApplicationBuilder UseAbsoluteSwagger(this IApplicationBuilder app, SwaggerPolicy? policy)
     {
         if (policy is null)
         {
@@ -257,29 +263,26 @@ END;";
     {
         if (configuration.DatabasePolicies is null) return;
 
-        var loggerFactory = app.ApplicationServices.GetRequiredService<ILoggerFactory>();
-        var logger = loggerFactory.CreateLogger("DatabaseInitializer");
-
         foreach (var policy in configuration.DatabasePolicies.Where(x => x.InitializeDatabase))
         {
             string connectionString = Environment.GetEnvironmentVariable(policy.ConnectionStringName)!;
 
-            DatabaseInitializer.Initialize(logger, connectionString, policy.DatabaseProvider, policy.InitializationScript!);
+            DatabaseInitializer.Initialize(connectionString, policy.DatabaseProvider, policy.InitializationScript!);
 
             if (policy.InitializeAuditTable)
             {
                 switch (policy.DatabaseProvider)
                 {
-                    case DatabaseProvider.PostgreSQL:
-                        DatabaseInitializer.Initialize(logger, connectionString, policy.DatabaseProvider, postgresAuditSetup);
-                        DatabaseInitializer.Initialize(logger, connectionString, policy.DatabaseProvider, postgresDiscoveryLoop);
+                    case RelationalDatabaseProvider.PostgreSQL:
+                        DatabaseInitializer.Initialize(connectionString, policy.DatabaseProvider, postgresAuditSetup);
+                        DatabaseInitializer.Initialize(connectionString, policy.DatabaseProvider, postgresDiscoveryLoop);
                         break;
 
-                    case DatabaseProvider.MSSQL:
-                        DatabaseInitializer.Initialize(logger, connectionString, policy.DatabaseProvider, mssqlAuditTable);
-                        DatabaseInitializer.Initialize(logger, connectionString, policy.DatabaseProvider, mssqlDropProcedure);
-                        DatabaseInitializer.Initialize(logger, connectionString, policy.DatabaseProvider, mssqlCreateProcedure);
-                        DatabaseInitializer.Initialize(logger, connectionString, policy.DatabaseProvider, mssqlDiscoveryLoop);
+                    case RelationalDatabaseProvider.MSSQL:
+                        DatabaseInitializer.Initialize(connectionString, policy.DatabaseProvider, mssqlAuditTable);
+                        DatabaseInitializer.Initialize(connectionString, policy.DatabaseProvider, mssqlDropProcedure);
+                        DatabaseInitializer.Initialize(connectionString, policy.DatabaseProvider, mssqlCreateProcedure);
+                        DatabaseInitializer.Initialize(connectionString, policy.DatabaseProvider, mssqlDiscoveryLoop);
                         break;
                 }
             }
@@ -290,19 +293,16 @@ END;";
     {
         if (configuration.StoragePolicies is null || !configuration.StoragePolicies.Any()) return;
 
-        var loggerFactory = app.ApplicationServices.GetRequiredService<ILoggerFactory>();
-        var logger = loggerFactory.CreateLogger("StorageInitializer");
-
         foreach (var policy in configuration.StoragePolicies)
         {
             try
             {
                 StorageFactory.EnsureBucketExistsAsync(policy).GetAwaiter().GetResult();
-                logger.LogInformation("Bucket '{BucketName}' ensured for {Provider} ({PolicyName}).", policy.BucketName, policy.StorageProvider, policy.Name);
+                Logger.Info($"Bucket '{policy.BucketName}' ensured for {policy.StorageProvider} ({policy.Name}).");
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "Could not ensure bucket '{BucketName}' for {Provider} ({PolicyName}).", policy.BucketName, policy.StorageProvider, policy.Name);
+                Logger.Error($"Could not ensure bucket '{policy.BucketName}' for {policy.StorageProvider} ({policy.Name}).", ex);
             }
         }
     }
@@ -391,4 +391,11 @@ END;";
     /// <param name="app">The application builder.</param>
     /// <returns>The <paramref name="app"/> instance.</returns>
     private static IApplicationBuilder UseAbsoluteDatabase(this IApplicationBuilder app) => app.UseMiddleware<DatabaseTransactionMiddleware>();
+
+    /// <summary>
+    /// Adds the request and response logging middleware.
+    /// </summary>
+    /// <param name="app">The application builder.</param>
+    /// <returns>The <paramref name="app"/> instance.</returns>
+    private static IApplicationBuilder UseRequestResponseLogging(this IApplicationBuilder app) => app.UseMiddleware<RequestResponseLoggingMiddleware>();
 }

@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using AbsoluteAlgorithm.Infrastructure.Utilities;
+using AbsoluteAlgorithm.Core.Security;
 using Microsoft.AspNetCore.Http;
 
 namespace AbsoluteAlgorithm.Infrastructure.Services;
@@ -24,14 +24,14 @@ public class HttpContextCurrentUserAccessor : ICurrentUserAccessor
     public ClaimsPrincipal? Principal => _httpContextAccessor.HttpContext?.User;
 
     /// <inheritdoc />
-    public string? UserId => ClaimUtility.GetUserId(Principal);
+    public string? UserId => Identity.GetUserId(Principal);
 
     /// <inheritdoc />
-    public string? Email => ClaimUtility.GetEmail(Principal);
+    public string? Email => Identity.GetEmail(Principal);
 
     /// <inheritdoc />
     public bool IsAuthenticated => Principal?.Identity?.IsAuthenticated ?? false;
 
     /// <inheritdoc />
-    public IReadOnlyList<string> Roles => ClaimUtility.GetRoles(Principal);
+    public IReadOnlyList<string> Roles => Identity.GetRoles(Principal);
 }

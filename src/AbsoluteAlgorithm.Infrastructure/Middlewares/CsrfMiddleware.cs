@@ -1,5 +1,5 @@
-using AbsoluteAlgorithm.Infrastructure.Constraints;
-using AbsoluteAlgorithm.Infrastructure.Exceptions;
+using AbsoluteAlgorithm.Core.Constraints;
+using AbsoluteAlgorithm.Core.Exceptions;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Http;
 
@@ -60,7 +60,7 @@ public class CsrfMiddleware
             }
             catch (AntiforgeryValidationException)
             {
-                throw new ApiException(ERRORCODE.FORBIDDEN, "A valid CSRF token is required for cookie-authenticated requests.");
+                throw new Core.Exceptions.ApplicationException(ERRORCODE.FORBIDDEN, "A valid CSRF token is required for cookie-authenticated requests.");
             }
         }
 

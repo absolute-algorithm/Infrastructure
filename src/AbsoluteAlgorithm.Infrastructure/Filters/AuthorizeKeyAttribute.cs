@@ -1,7 +1,7 @@
 using System.Reflection;
-using AbsoluteAlgorithm.Infrastructure.Constraints;
-using AbsoluteAlgorithm.Infrastructure.Models.Response;
-using AbsoluteAlgorithm.Infrastructure.Utilities;
+using AbsoluteAlgorithm.Core.Constraints;
+using AbsoluteAlgorithm.Core.Models.Response;
+using AbsoluteAlgorithm.Core.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -67,7 +67,7 @@ public sealed class AuthorizeKeyAttribute : Attribute, IAuthorizationFilter
         }
 
         var expectedApiKey = Environment.GetEnvironmentVariable(SecretName);
-        if (!string.IsNullOrWhiteSpace(expectedApiKey) && TokenUtility.FixedTimeEquals(expectedApiKey, providedApiKey))
+        if (!string.IsNullOrWhiteSpace(expectedApiKey) && Token.FixedTimeEquals(expectedApiKey, providedApiKey))
         {
             return;
         }

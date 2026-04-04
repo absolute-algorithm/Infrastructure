@@ -1,6 +1,6 @@
 using System.Data;
-using AbsoluteAlgorithm.Infrastructure.Enums;
-using AbsoluteAlgorithm.Infrastructure.Models.Database;
+using AbsoluteAlgorithm.Core.Enums;
+using AbsoluteAlgorithm.Core.Models.Database;
 using Microsoft.Data.SqlClient;
 using Npgsql;
 
@@ -17,8 +17,8 @@ public static class DbConnectionFactory
 
         return policy.DatabaseProvider switch
         {
-            DatabaseProvider.PostgreSQL => new NpgsqlConnection(formattedString),
-            DatabaseProvider.MSSQL => new SqlConnection(formattedString),
+            RelationalDatabaseProvider.PostgreSQL => new NpgsqlConnection(formattedString),
+            RelationalDatabaseProvider.MSSQL => new SqlConnection(formattedString),
             _ => throw new NotSupportedException($"Database type {policy.DatabaseProvider} is not supported.")
         };
     }
@@ -27,7 +27,7 @@ public static class DbConnectionFactory
     {
         return policy.DatabaseProvider switch
         {
-            DatabaseProvider.PostgreSQL => new NpgsqlConnectionStringBuilder(rawString)
+            RelationalDatabaseProvider.PostgreSQL => new NpgsqlConnectionStringBuilder(rawString)
             {
                 MaxPoolSize = policy.MaxPoolSize,
                 MinPoolSize = policy.MinPoolSize,
@@ -35,7 +35,7 @@ public static class DbConnectionFactory
                 Pooling = true
             }.ToString(),
 
-            DatabaseProvider.MSSQL => new SqlConnectionStringBuilder(rawString)
+            RelationalDatabaseProvider.MSSQL => new SqlConnectionStringBuilder(rawString)
             {
                 MaxPoolSize = policy.MaxPoolSize,
                 MinPoolSize = policy.MinPoolSize,

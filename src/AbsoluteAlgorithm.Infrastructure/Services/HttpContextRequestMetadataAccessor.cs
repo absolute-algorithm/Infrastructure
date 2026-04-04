@@ -1,5 +1,5 @@
-using AbsoluteAlgorithm.Infrastructure.Models.Request;
-using AbsoluteAlgorithm.Infrastructure.Utilities;
+using AbsoluteAlgorithm.Core.Models.Request;
+using AbsoluteAlgorithm.Core.Networking;
 using Microsoft.AspNetCore.Http;
 
 namespace AbsoluteAlgorithm.Infrastructure.Services;

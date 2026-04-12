@@ -8,9 +8,11 @@ using AbsoluteAlgorithm.Infrastructure.ResilienceFactories;
 using AbsoluteAlgorithm.Infrastructure.Database;
 using AbsoluteAlgorithm.Infrastructure.Filters;
 using AbsoluteAlgorithm.Infrastructure.Health;
+using AbsoluteAlgorithm.Core.Caching;
 using AbsoluteAlgorithm.Core.Constraints;
 using AbsoluteAlgorithm.Core.Enums;
 using AbsoluteAlgorithm.Core.Models.Auth;
+using AbsoluteAlgorithm.Core.Models.Caching;
 using AbsoluteAlgorithm.Core.Models.Configuration;
 using AbsoluteAlgorithm.Core.Models.Database;
 using AbsoluteAlgorithm.Core.Models.Documentation;
@@ -41,6 +43,7 @@ using Minio.AspNetCore.HealthChecks;
 using NLog.Web;
 using NSwag;
 using NSwag.Generation.Processors.Security;
+using MongoDB.Driver;
 
 namespace AbsoluteAlgorithm.Infrastructure.Extensions;
 
@@ -124,6 +127,11 @@ public static class WebApplicationBuilderExtensions
             builder.Services.AddAbsoluteSwagger(appConfig);
         }
 
+        if (appConfig.CachingPolicy is not null)
+        {
+            builder.Services.AddAbsoluteCaching(appConfig.CachingPolicy);
+        }
+
         if (appConfig.DatabasePolicies is not null)
         {
             builder.Services.AddAbsoluteDatabase(appConfig.DatabasePolicies);
@@ -171,6 +179,23 @@ public static class WebApplicationBuilderExtensions
         }
 
         return builder;
+    }
+
+    /// <summary>
+    /// Registers library caching services.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="policy">The caching policy.</param>
+    /// <returns>The <paramref name="services"/> instance.</returns>
+    private static IServiceCollection AddAbsoluteCaching(this IServiceCollection services, CachingPolicy? policy)
+    {
+        if (policy is null || !policy.Enabled)
+        {
+            return services;
+        }
+
+        services.AddAbsoluteAlgorithmCaching(policy);
+        return services;
     }
 
     /// <summary>
@@ -400,6 +425,11 @@ public static class WebApplicationBuilderExtensions
 
         foreach (var policy in databasePolicies)
         {
+            if (policy.DatabaseProvider == DatabaseProvider.MongoDb)
+            {
+                continue;
+            }
+
             services.AddKeyedScoped<Repository>(policy.Name, (sp, key) => new Repository(policy, sp.GetRequiredService<IHttpContextAccessor>()));
         }
 
@@ -500,15 +530,20 @@ public static class WebApplicationBuilderExtensions
 
                 _ = policy.DatabaseProvider switch
                 {
-                    RelationalDatabaseProvider.PostgreSQL => healthBuilder.AddNpgSql(
+                    DatabaseProvider.PostgreSQL => healthBuilder.AddNpgSql(
                         connectionString,
                         name: $"Postgres: {policy.Name}",
                         tags: ["db", "postgres", "ready"]),
 
-                    RelationalDatabaseProvider.MSSQL => healthBuilder.AddSqlServer(
+                    DatabaseProvider.MSSQL => healthBuilder.AddSqlServer(
                         connectionString,
                         name: $"MSSQL: {policy.Name}",
                         tags: ["db", "mssql", "ready"]),
+
+                    DatabaseProvider.MongoDb => healthBuilder.AddMongoDb(
+                        _ => new MongoClient(connectionString),
+                        name: $"MongoDB: {policy.Name}",
+                        tags: ["db", "mongodb", "ready"]),
 
                     _ => healthBuilder
                 };

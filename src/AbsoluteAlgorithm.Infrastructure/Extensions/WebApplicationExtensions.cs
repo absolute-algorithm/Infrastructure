@@ -267,23 +267,31 @@ END;";
         {
             string connectionString = Environment.GetEnvironmentVariable(policy.ConnectionStringName)!;
 
-            DatabaseInitializer.Initialize(connectionString, policy.DatabaseProvider, policy.InitializationScript!);
-
-            if (policy.InitializeAuditTable)
+            if (policy.DatabaseProvider == DatabaseProvider.MongoDb)
             {
-                switch (policy.DatabaseProvider)
-                {
-                    case RelationalDatabaseProvider.PostgreSQL:
-                        DatabaseInitializer.Initialize(connectionString, policy.DatabaseProvider, postgresAuditSetup);
-                        DatabaseInitializer.Initialize(connectionString, policy.DatabaseProvider, postgresDiscoveryLoop);
-                        break;
+                // MongoDB-specific initialization
+                MongoDbInitializer.Initialize(connectionString);
+            }
+            else
+            {
+                DatabaseInitializer.Initialize(connectionString, policy.DatabaseProvider, policy.InitializationScript!);
 
-                    case RelationalDatabaseProvider.MSSQL:
-                        DatabaseInitializer.Initialize(connectionString, policy.DatabaseProvider, mssqlAuditTable);
-                        DatabaseInitializer.Initialize(connectionString, policy.DatabaseProvider, mssqlDropProcedure);
-                        DatabaseInitializer.Initialize(connectionString, policy.DatabaseProvider, mssqlCreateProcedure);
-                        DatabaseInitializer.Initialize(connectionString, policy.DatabaseProvider, mssqlDiscoveryLoop);
-                        break;
+                if (policy.InitializeAuditTable)
+                {
+                    switch (policy.DatabaseProvider)
+                    {
+                        case DatabaseProvider.PostgreSQL:
+                            DatabaseInitializer.Initialize(connectionString, policy.DatabaseProvider, postgresAuditSetup);
+                            DatabaseInitializer.Initialize(connectionString, policy.DatabaseProvider, postgresDiscoveryLoop);
+                            break;
+
+                        case DatabaseProvider.MSSQL:
+                            DatabaseInitializer.Initialize(connectionString, policy.DatabaseProvider, mssqlAuditTable);
+                            DatabaseInitializer.Initialize(connectionString, policy.DatabaseProvider, mssqlDropProcedure);
+                            DatabaseInitializer.Initialize(connectionString, policy.DatabaseProvider, mssqlCreateProcedure);
+                            DatabaseInitializer.Initialize(connectionString, policy.DatabaseProvider, mssqlDiscoveryLoop);
+                            break;
+                    }
                 }
             }
         }

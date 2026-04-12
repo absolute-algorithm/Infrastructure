@@ -8,7 +8,7 @@
     <PackageId>AbsoluteAlgorithm.Infrastructure</PackageId>
     <AssemblyName>AbsoluteAlgorithm.Infrastructure</AssemblyName>
     <RootNamespace>AbsoluteAlgorithm.Infrastructure</RootNamespace>
-    <Version>1.0.1</Version>
+    <Version>1.0.2</Version>
     <Authors>S Lalith Prasad</Authors>
     <Company>AbsoluteAlgorithm</Company>
     <Copyright>Copyright © 2026 AbsoluteAlgorithm. All Rights Reserved.</Copyright>
@@ -60,6 +60,7 @@
 
   <ItemGroup>
     <PackageReference Include="AWSSDK.S3" Version="4.0.19" />
+    <PackageReference Include="MongoDB.Driver" Version="3.7.1" />
     <PackageReference Include="NLog.Web.AspNetCore" Version="6.1.0" />
     <PackageReference Include="Dapper" Version="2.1.72" />
     <PackageReference Include="CsvHelper" Version="33.0.1" />
@@ -70,12 +71,13 @@
     <PackageReference Include="Google.Cloud.Storage.V1" Version="4.10.0" />
     <PackageReference Include="Minio.AspNetCore.HealthChecks" Version="6.0.1" />
     <PackageReference Include="AspNetCore.HealthChecks.AzureStorage" Version="7.0.0" />
+    <PackageReference Include="AspNetCore.HealthChecks.MongoDb" Version="9.0.0" />
     <PackageReference Include="AspNetCore.HealthChecks.NpgSql" Version="9.0.0" />
     <PackageReference Include="AspNetCore.HealthChecks.SqlServer" Version="9.0.0" />
     <PackageReference Include="Asp.Versioning.Mvc" Version="8.1.0" />
     <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.0" />
     <PackageReference Include="NSwag.AspNetCore" Version="14.6.3" />
     <PackageReference Include="NSwag.Generation.AspNetCore" Version="14.6.3" />
-    <PackageReference Include="AbsoluteAlgorithm.Core" Version="1.0.0" />
+    <PackageReference Include="AbsoluteAlgorithm.Core" Version="1.0.1-beta.14" />
   </ItemGroup>
 </Project>

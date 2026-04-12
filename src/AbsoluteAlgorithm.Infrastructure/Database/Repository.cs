@@ -65,6 +65,11 @@ public class Repository
 
     private (IDbConnection Connection, IDbTransaction Transaction) BeginTransaction()
     {
+        if (_policy.DatabaseProvider == DatabaseProvider.MongoDb)
+        {
+            throw new NotSupportedException("Transactions are not supported for MongoDB.");
+        }
+
         var context = _httpContextAccessor.HttpContext ?? throw new InvalidOperationException("No HttpContext found.");
 
         var connections = GetOrCreateConnectionStore(context);
@@ -85,10 +90,10 @@ public class Repository
 
         string sessionSql = _policy.DatabaseProvider switch
         {
-            RelationalDatabaseProvider.PostgreSQL =>
+            DatabaseProvider.PostgreSQL =>
                 "SELECT set_config('app.user_id', @userId, true), set_config('app.correlation_id', @correlationId, true);",
 
-            RelationalDatabaseProvider.MSSQL =>
+            DatabaseProvider.MSSQL =>
                 "EXEC sp_set_session_context @key=N'user_id', @value=@userId; EXEC sp_set_session_context @key=N'correlation_id', @value=@correlationId;",
 
             _ => string.Empty
@@ -464,7 +469,7 @@ public class Repository
     {
         // 1. Create the Generic Policy for the specific result type
         var policy = DBResiliencePolicyFactory.CreateDbPolicy<TResult>(
-            _policy.DatabaseProvider, 
+            _policy.DatabaseProvider,
             _policy.ResiliencePolicy);
 
         return policy.ExecuteAsync(token => action(token), cancellationToken);
@@ -477,7 +482,7 @@ public class Repository
     {
         // 2. Create the Non-Generic Policy specifically for 'int' results or void commands
         var policy = DBResiliencePolicyFactory.CreateDbCommandPolicy(
-            _policy.DatabaseProvider, 
+            _policy.DatabaseProvider,
             _policy.ResiliencePolicy);
 
         // Note: IAsyncPolicy (non-generic) can execute a Task<int> via this overload
@@ -627,7 +632,7 @@ public class Repository
         {
             if (string.IsNullOrWhiteSpace(query.DefaultOrderBy))
             {
-                return _policy.DatabaseProvider == RelationalDatabaseProvider.MSSQL ? " ORDER BY (SELECT 1)" : string.Empty;
+                return _policy.DatabaseProvider == DatabaseProvider.MSSQL ? " ORDER BY (SELECT 1)" : string.Empty;
             }
 
             return NormalizeOrderByClause(query.DefaultOrderBy);
@@ -638,14 +643,14 @@ public class Repository
             .Select(sort =>
             {
                 var column = ResolveMappedField(query.SortColumns, sort.Field, "sort");
-                var direction = sort.Direction == SortDirection.Descending ? "DESC" : "ASC";
+                var direction = sort.Direction == Core.Enums.SortDirection.Descending ? "DESC" : "ASC";
                 return $"{column} {direction}";
             })
             .ToArray();
 
         if (segments.Length == 0)
         {
-            return _policy.DatabaseProvider == RelationalDatabaseProvider.MSSQL ? " ORDER BY (SELECT 1)" : string.Empty;
+            return _policy.DatabaseProvider == DatabaseProvider.MSSQL ? " ORDER BY (SELECT 1)" : string.Empty;
         }
 
         return " ORDER BY " + string.Join(", ", segments);
@@ -655,8 +660,8 @@ public class Repository
     {
         return _policy.DatabaseProvider switch
         {
-            RelationalDatabaseProvider.MSSQL when string.IsNullOrWhiteSpace(orderByClause) => " ORDER BY (SELECT 1) OFFSET @__pageOffset ROWS FETCH NEXT @__pageSize ROWS ONLY",
-            RelationalDatabaseProvider.MSSQL => " OFFSET @__pageOffset ROWS FETCH NEXT @__pageSize ROWS ONLY",
+            DatabaseProvider.MSSQL when string.IsNullOrWhiteSpace(orderByClause) => " ORDER BY (SELECT 1) OFFSET @__pageOffset ROWS FETCH NEXT @__pageSize ROWS ONLY",
+            DatabaseProvider.MSSQL => " OFFSET @__pageOffset ROWS FETCH NEXT @__pageSize ROWS ONLY",
             _ => " LIMIT @__pageSize OFFSET @__pageOffset"
         };
     }

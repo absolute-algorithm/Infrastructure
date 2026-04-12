@@ -17,7 +17,7 @@ public static class DBResiliencePolicyFactory
     /// Creates a database-aware resilience policy.
     /// </summary>
     /// <typeparam name="T">The return type of the database operation.</typeparam>
-    public static IAsyncPolicy<T> CreateDbPolicy<T>(RelationalDatabaseProvider provider, ResiliencePolicy? policy)
+    public static IAsyncPolicy<T> CreateDbPolicy<T>(DatabaseProvider provider, ResiliencePolicy? policy)
     {
         return ResiliencePolicyFactory.CreatePolicy<T>(
             policy,
@@ -30,7 +30,7 @@ public static class DBResiliencePolicyFactory
     /// Checks if an exception is considered transient for the specific database provider.
     /// This keeps the "Expert Knowledge" in Infrastructure while the "Logic" stays in Core.
     /// </summary>
-    private static bool IsTransientException(RelationalDatabaseProvider provider, Exception ex)
+    private static bool IsTransientException(DatabaseProvider provider, Exception ex)
     {
         // Handle common base exceptions
         if (ex is DbException || ex is TimeoutException) return true;
@@ -38,10 +38,10 @@ public static class DBResiliencePolicyFactory
         // Handle provider-specific "Inner" exceptions
         return provider switch
         {
-            RelationalDatabaseProvider.PostgreSQL =>
+            DatabaseProvider.PostgreSQL =>
                 ex is NpgsqlException nex && nex.IsTransient,
 
-            RelationalDatabaseProvider.MSSQL =>
+            DatabaseProvider.MSSQL =>
                 ex is SqlException sqlex && sqlex.Number == 1205,
 
             _ => false
@@ -51,7 +51,7 @@ public static class DBResiliencePolicyFactory
     /// <summary>
     /// Helper for database commands that do not return a value (e.g., ExecuteNonQuery).
     /// </summary>
-    public static IAsyncPolicy CreateDbCommandPolicy(RelationalDatabaseProvider provider, ResiliencePolicy? policy)
+    public static IAsyncPolicy CreateDbCommandPolicy(DatabaseProvider provider, ResiliencePolicy? policy)
     {
         return ResiliencePolicyFactory.CreatePolicy(
             policy, shouldHandleException: ex => IsTransientException(provider, ex)

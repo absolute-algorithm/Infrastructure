@@ -1,6 +1,6 @@
 # AbsoluteAlgorithm.Infrastructure
 
-Reusable ASP.NET Core Web API infrastructure library for rapid, secure, and maintainable service development. Includes database, storage, authentication, resilience, OpenAPI, and more—fully pluggable and opt-in.
+Reusable ASP.NET Core Web API infrastructure library for rapid, secure, and maintainable service development. Includes database, storage, caching, authentication, resilience, OpenAPI, and more - fully pluggable and opt-in.
 
 ## Installation
 
@@ -263,8 +263,14 @@ app.Run();
 ### Database
 
 - Dapper-based, transaction-aware repositories.
-- Supports PostgreSQL and SQL Server.
+- Supports PostgreSQL and SQL Server repositories.
+- Supports MongoDB startup connectivity validation and health checks.
 - Request-scoped transactions, optimistic concurrency, paged queries, and resilience policies.
+
+### Caching
+
+- Integrates with Core caching policy via `ApplicationConfiguration.CachingPolicy`.
+- Registers IMemoryCache-based application caching when caching is enabled.
 
 ### Storage
 
@@ -360,6 +366,7 @@ All features are opt-in through the root configuration model.
 | `SwaggerPolicy` | `SwaggerPolicy?` | Swagger options |
 | `EnableIdempotency` | `bool` | Request replay protection |
 | `IdempotencyPolicy` | `IdempotencyPolicy?` | Idempotency options |
+| `CachingPolicy` | `CachingPolicy?` | Application cache configuration |
 | `ConfigureAuthentication` | `bool` | Auth handlers |
 | `ConfigureAuthorization` | `bool` | Authorization policies |
 | `AuthManifest` | `AuthManifest?` | Auth settings |
@@ -373,7 +380,8 @@ All features are opt-in through the root configuration model.
 
 ## Database
 
-Dapper-based, request-scoped, transaction-aware repositories. Supports **PostgreSQL** and **SQL Server**.
+Dapper-based, request-scoped, transaction-aware repositories. Repository support is for **PostgreSQL** and **SQL Server**.
+MongoDB support is used for startup connectivity validation and health checks (no SQL initialization script required).
 
 ### Configuration
 

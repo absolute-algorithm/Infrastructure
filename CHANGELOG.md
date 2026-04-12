@@ -1,5 +1,19 @@
 # Changelog
 
+## [2026-04-12]
+### Added
+- MongoDB startup connectivity validation via `MongoDbInitializer` without requiring initialization scripts.
+- MongoDB health check registration for `DatabaseProvider.MongoDb` policies.
+- Core caching integration via `ApplicationConfiguration.CachingPolicy` and `AddAbsoluteAlgorithmCaching`.
+
+### Changed
+- Upgraded `AbsoluteAlgorithm.Core` dependency to `1.0.1-beta.14`.
+- Added caching service registration flow in infrastructure bootstrap.
+
+### Fixed
+- Skipped Dapper `Repository` keyed registration for `DatabaseProvider.MongoDb` to prevent runtime mismatches.
+- Standardized provider usage across infrastructure to use `DatabaseProvider`.
+
 ## [2026-03-21]
 ### Tested
 - Authentication and storage controllers with corresponding tests.

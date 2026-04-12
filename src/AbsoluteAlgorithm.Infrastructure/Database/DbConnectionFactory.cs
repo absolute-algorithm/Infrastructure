@@ -17,8 +17,8 @@ public static class DbConnectionFactory
 
         return policy.DatabaseProvider switch
         {
-            RelationalDatabaseProvider.PostgreSQL => new NpgsqlConnection(formattedString),
-            RelationalDatabaseProvider.MSSQL => new SqlConnection(formattedString),
+            DatabaseProvider.PostgreSQL => new NpgsqlConnection(formattedString),
+            DatabaseProvider.MSSQL => new SqlConnection(formattedString),
             _ => throw new NotSupportedException($"Database type {policy.DatabaseProvider} is not supported.")
         };
     }
@@ -27,7 +27,7 @@ public static class DbConnectionFactory
     {
         return policy.DatabaseProvider switch
         {
-            RelationalDatabaseProvider.PostgreSQL => new NpgsqlConnectionStringBuilder(rawString)
+            DatabaseProvider.PostgreSQL => new NpgsqlConnectionStringBuilder(rawString)
             {
                 MaxPoolSize = policy.MaxPoolSize,
                 MinPoolSize = policy.MinPoolSize,
@@ -35,7 +35,7 @@ public static class DbConnectionFactory
                 Pooling = true
             }.ToString(),
 
-            RelationalDatabaseProvider.MSSQL => new SqlConnectionStringBuilder(rawString)
+            DatabaseProvider.MSSQL => new SqlConnectionStringBuilder(rawString)
             {
                 MaxPoolSize = policy.MaxPoolSize,
                 MinPoolSize = policy.MinPoolSize,

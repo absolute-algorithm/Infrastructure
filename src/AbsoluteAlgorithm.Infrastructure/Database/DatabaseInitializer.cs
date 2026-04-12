@@ -9,7 +9,7 @@ namespace AbsoluteAlgorithm.Infrastructure.Database;
 
 internal static class DatabaseInitializer
 {
-    internal static void Initialize(string connectionString, RelationalDatabaseProvider provider, string databaseScript)
+    internal static void Initialize(string connectionString, DatabaseProvider provider, string databaseScript)
     {
         try
         {
@@ -42,7 +42,7 @@ internal static class DatabaseInitializer
         }
     }
 
-    private static void EnsureDatabaseExists(string connectionString, RelationalDatabaseProvider provider)
+    private static void EnsureDatabaseExists(string connectionString, DatabaseProvider provider)
     {
         string masterConnString;
         string dbName;
@@ -51,7 +51,7 @@ internal static class DatabaseInitializer
 
         switch (provider)
         {
-            case RelationalDatabaseProvider.PostgreSQL:
+            case DatabaseProvider.PostgreSQL:
                 var pg = new NpgsqlConnectionStringBuilder(connectionString);
                 dbName = pg.Database!;
                 pg.Database = "postgres";
@@ -60,7 +60,7 @@ internal static class DatabaseInitializer
                 createSql = $"CREATE DATABASE \"{dbName}\" ENCODING 'UTF8'";
                 break;
 
-            case RelationalDatabaseProvider.MSSQL:
+            case DatabaseProvider.MSSQL:
                 var ms = new SqlConnectionStringBuilder(connectionString);
                 dbName = ms.InitialCatalog;
                 ms.InitialCatalog = "master";
@@ -85,12 +85,12 @@ internal static class DatabaseInitializer
         }
     }
 
-    private static DbConnection CreateConnection(string connString, RelationalDatabaseProvider provider)
+    private static DbConnection CreateConnection(string connString, DatabaseProvider provider)
     {
         return provider switch
         {
-            RelationalDatabaseProvider.PostgreSQL => new NpgsqlConnection(connString),
-            RelationalDatabaseProvider.MSSQL => new SqlConnection(connString),
+            DatabaseProvider.PostgreSQL => new NpgsqlConnection(connString),
+            DatabaseProvider.MSSQL => new SqlConnection(connString),
             _ => throw new NotSupportedException($"Provider {provider} is not supported.")
         };
     }

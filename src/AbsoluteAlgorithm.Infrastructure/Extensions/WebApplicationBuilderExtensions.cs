@@ -427,11 +427,44 @@ public static class WebApplicationBuilderExtensions
         {
             if (policy.DatabaseProvider == DatabaseProvider.MongoDb)
             {
+                string connectionString = Environment.GetEnvironmentVariable(policy.ConnectionStringName!)
+                    ?? throw new InvalidOperationException($"Database secret '{policy.ConnectionStringName}' is missing.");
+
+                var mongoUrl = new MongoUrl(connectionString);
+                string databaseName = mongoUrl.DatabaseName
+                    ?? throw new InvalidOperationException($"MongoDB connection string for '{policy.Name}' must include a database name.");
+
+                services.AddKeyedSingleton<IMongoClient>(policy.Name, (sp, key) => new MongoClient(connectionString));
+                services.AddKeyedSingleton<IMongoDatabase>(policy.Name, (sp, key) =>
+                    sp.GetRequiredKeyedService<IMongoClient>(policy.Name).GetDatabase(databaseName));
+
                 continue;
             }
 
             services.AddKeyedScoped<Repository>(policy.Name, (sp, key) => new Repository(policy, sp.GetRequiredService<IHttpContextAccessor>()));
         }
+
+        return services;
+    }
+
+    /// <summary>
+    /// Registers a keyed MongoDB collection that is resolved from a keyed <see cref="IMongoDatabase"/>.
+    /// </summary>
+    /// <typeparam name="TDocument">The document type stored in the collection.</typeparam>
+    /// <param name="services">The service collection.</param>
+    /// <param name="policyName">The key used for the MongoDB database registration.</param>
+    /// <param name="collectionName">The MongoDB collection name.</param>
+    /// <returns>The <paramref name="services"/> instance.</returns>
+    public static IServiceCollection AddKeyedMongoCollection<TDocument>(
+        this IServiceCollection services,
+        string policyName,
+        string collectionName)
+    {
+        services.AddKeyedSingleton<IMongoCollection<TDocument>>(policyName, (sp, key) =>
+        {
+            var database = sp.GetRequiredKeyedService<IMongoDatabase>(policyName);
+            return database.GetCollection<TDocument>(collectionName);
+        });
 
         return services;
     }

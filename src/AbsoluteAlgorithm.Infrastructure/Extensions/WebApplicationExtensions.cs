@@ -197,7 +197,8 @@ END;";
 
         app.UseAbsoluteHealthEndpoints(appConfig.EnableHealthChecks);
 
-        app.MapGet("/", () => $"API is Operational");
+        app.MapGet("/", () => "API is Operational");
+
         app.MapControllers();
 
         return app;

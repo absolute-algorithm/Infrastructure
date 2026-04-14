@@ -8,7 +8,7 @@
     <PackageId>AbsoluteAlgorithm.Infrastructure</PackageId>
     <AssemblyName>AbsoluteAlgorithm.Infrastructure</AssemblyName>
     <RootNamespace>AbsoluteAlgorithm.Infrastructure</RootNamespace>
-    <Version>1.0.2</Version>
+    <Version>1.0.3</Version>
     <Authors>S Lalith Prasad</Authors>
     <Company>AbsoluteAlgorithm</Company>
     <Copyright>Copyright © 2026 AbsoluteAlgorithm. All Rights Reserved.</Copyright>
@@ -78,6 +78,6 @@
     <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.0" />
     <PackageReference Include="NSwag.AspNetCore" Version="14.6.3" />
     <PackageReference Include="NSwag.Generation.AspNetCore" Version="14.6.3" />
-    <PackageReference Include="AbsoluteAlgorithm.Core" Version="1.0.1" />
+    <PackageReference Include="AbsoluteAlgorithm.Core" Version="1.0.2" />
   </ItemGroup>
 </Project>

@@ -30,6 +30,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Routing;
@@ -114,6 +115,14 @@ public static class WebApplicationBuilderExtensions
         {
             options.SuppressModelStateInvalidFilter = true;
         });
+
+        if (appConfig.EnableRazorPages)
+        {
+            builder.Services.AddRazorPages(options =>
+            {
+                options.Conventions.ConfigureFilter(new AutoValidateAntiforgeryTokenAttribute());
+            });
+        }
 
         builder.Services.AddResponseCaching();
 

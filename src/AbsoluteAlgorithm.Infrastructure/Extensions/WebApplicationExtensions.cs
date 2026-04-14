@@ -197,15 +197,9 @@ END;";
 
         app.UseAbsoluteHealthEndpoints(appConfig.EnableHealthChecks);
 
+        app.MapGet("/", () => "API is Operational");
+
         app.MapControllers();
-
-        if (appConfig.EnableRazorPages)
-        {
-            app.MapRazorPages();
-        }
-
-        app.MapGet("/", () => "API is Operational")
-            .WithOrder(int.MaxValue);
 
         return app;
     }
